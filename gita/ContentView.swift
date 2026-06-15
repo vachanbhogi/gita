@@ -25,7 +25,7 @@ struct TabItem: Identifiable {
 class BrowserEngine: NSObject, ObservableObject, WKNavigationDelegate {
     @Published var tabs: [TabItem] = []
     @Published var activeTabId: UUID = UUID()
-    @Published var activeWebView: WKWebView = WKWebView()
+    @Published var activeWebView: WKWebView!
 
     // make sure to update SwiftUI after WKWebView updates
     @Published var currentURL: String = ""
