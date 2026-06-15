@@ -40,6 +40,9 @@ class BrowserEngine: NSObject, ObservableObject, WKNavigationDelegate {
     private var failedURL: String?
     private let monitor = NWPathMonitor()
     private let monitorQueue = DispatchQueue(label: "connectivity")
+    
+    private var inactivityTimer: Timer?
+    private var memoryPressureSource: DispatchSourceMemoryPressure?
 
     override init() {
         super.init()
@@ -58,6 +61,14 @@ class BrowserEngine: NSObject, ObservableObject, WKNavigationDelegate {
         self.activeWebView = defaultTab.webView!
         
         setupObservations(for: defaultTab.webView!)
+        
+        startInactivityTimer()
+        setupMemoryPressureListener()
+    }
+    
+    deinit {
+        inactivityTimer?.invalidate()
+        memoryPressureSource?.cancel()
     }
 
     private func setupObservations(for webView: WKWebView) {
@@ -150,6 +161,8 @@ class BrowserEngine: NSObject, ObservableObject, WKNavigationDelegate {
             
             setupObservations(for: webView)
         }
+        
+        enforceLRULimit()
     }
 
     func closeTab(id: UUID) {
@@ -178,8 +191,66 @@ class BrowserEngine: NSObject, ObservableObject, WKNavigationDelegate {
         tabs[index].webView = webView
         upgradeToNativeUserAgent(for: webView)
         
-        if let url = URL(string: tabs[index].url) {
+        if let state = tabs[index].interactionState {
+            webView.interactionState = state
+        } else if let url = URL(string: tabs[index].url) {
             webView.load(URLRequest(url: url))
+        }
+    }
+
+    private func suspendTab(at index: Int) {
+        guard index >= 0 && index < tabs.count else { return }
+        guard tabs[index].id != activeTabId else { return }
+        guard let webView = tabs[index].webView else { return }
+        
+        tabs[index].interactionState = webView.interactionState
+        webView.navigationDelegate = nil
+        tabs[index].webView = nil
+        print("Suspended background tab: \(tabs[index].title)")
+    }
+
+    private func enforceLRULimit() {
+        let activeTabs = tabs.filter { $0.webView != nil && $0.id != activeTabId }
+        guard activeTabs.count > 3 else { return } // Max 4 active (1 active, 3 background)
+        
+        if let oldest = activeTabs.min(by: { $0.lastActiveTime < $1.lastActiveTime }),
+           let index = tabs.firstIndex(where: { $0.id == oldest.id }) {
+            suspendTab(at: index)
+        }
+    }
+
+    private func startInactivityTimer() {
+        inactivityTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+            let now = Date()
+            for i in 0..<self.tabs.count {
+                let tab = self.tabs[i]
+                if tab.id != self.activeTabId && tab.webView != nil {
+                    let idleTime = now.timeIntervalSince(tab.lastActiveTime)
+                    if idleTime > 600 { // 10 minutes
+                        self.suspendTab(at: i)
+                    }
+                }
+            }
+        }
+    }
+
+    private func setupMemoryPressureListener() {
+        let source = DispatchSource.makeMemoryPressureSource(eventMask: [.warning, .critical], queue: DispatchQueue.main)
+        source.setEventHandler { [weak self] in
+            guard let self = self else { return }
+            print("Low memory signal. Suspending all background tabs.")
+            self.suspendAllBackgroundTabs()
+        }
+        source.resume()
+        self.memoryPressureSource = source
+    }
+
+    private func suspendAllBackgroundTabs() {
+        for i in 0..<tabs.count {
+            if tabs[i].id != activeTabId {
+                suspendTab(at: i)
+            }
         }
     }
 
