@@ -58,6 +58,9 @@ class BrowserEngine: NSObject, ObservableObject, WKNavigationDelegate {
             webView.observe(\.title) { [weak self] webView, _ in
                 self?.pageTitle = webView.title ?? ""
             },
+            webView.observe(\.hasOnlySecureContent) { [weak self] webView, _ in
+                self?.isSecure = webView.hasOnlySecureContent
+            },
         ]
 
         // doesn't look like an unidentifiable bot
@@ -125,10 +128,6 @@ class BrowserEngine: NSObject, ObservableObject, WKNavigationDelegate {
     func goBack() { webView.goBack() }
     func goForward() { webView.goForward() }
     func reload() { webView.reload() }
-
-    func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
-        isSecure = webView.url?.scheme == "https"
-    }
 
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
         let nsError = error as NSError
