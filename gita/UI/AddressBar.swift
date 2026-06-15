@@ -1,28 +1,28 @@
 import SwiftUI
 
 struct AddressBar: View {
-    @ObservedObject var engine: BrowserEngine
+    @ObservedObject var tab: Tab
     @State private var textFieldURL: String = ""
     @FocusState private var isFocused: Bool
 
     var body: some View {
         HStack(spacing: 8) {
-            Button(action: engine.goBack) {
+            Button(action: tab.goBack) {
                 Image(systemName: "chevron.left")
             }
-            .disabled(!engine.canGoBack)
+            .disabled(!tab.canGoBack)
 
-            Button(action: engine.goForward) {
+            Button(action: tab.goForward) {
                 Image(systemName: "chevron.right")
             }
-            .disabled(!engine.canGoForward)
+            .disabled(!tab.canGoForward)
 
-            Button(action: engine.reload) {
+            Button(action: tab.reload) {
                 Image(systemName: "arrow.clockwise")
             }
 
-            Image(systemName: engine.isSecure ? "lock.fill" : "lock.open")
-                .foregroundColor(engine.isSecure ? .secondary : .orange)
+            Image(systemName: tab.isSecure ? "lock.fill" : "lock.open")
+                .foregroundColor(tab.isSecure ? .secondary : .orange)
                 .font(.caption)
 
             TextField("Search or enter address", text: $textFieldURL)
@@ -34,10 +34,10 @@ struct AddressBar: View {
                 .background(Color(.textBackgroundColor))
                 .cornerRadius(6)
                 .onSubmit {
-                    engine.navigate(to: textFieldURL)
+                    tab.navigate(to: textFieldURL)
                 }
 
-            if engine.isLoading {
+            if tab.isLoading {
                 ProgressView()
                     .scaleEffect(0.7)
                     .frame(width: 16)
@@ -45,7 +45,7 @@ struct AddressBar: View {
         }
         .padding(8)
         .background(.bar)
-        .onChange(of: engine.currentURL) { _, newValue in
+        .onChange(of: tab.url) { _, newValue in
             if !isFocused { textFieldURL = newValue }
         }
     }

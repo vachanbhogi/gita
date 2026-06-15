@@ -7,9 +7,15 @@ struct ContentView: View {
         VStack(spacing: 0) {
             TabBar(engine: engine)
             Divider()
-            AddressBar(engine: engine)
-            BrowserView(webView: engine.activeWebView)
-                .id(engine.activeTabId)
+            if let activeTab = engine.activeTab {
+                AddressBar(tab: activeTab)
+                if let webView = activeTab.webView {
+                    BrowserView(webView: webView)
+                        .id(activeTab.id)
+                } else {
+                    ProgressView()
+                }
+            }
         }
         .frame(minWidth: 800, minHeight: 600)
     }

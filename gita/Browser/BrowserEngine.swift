@@ -3,31 +3,20 @@ import WebKit
 import Combine
 import Network
 
-class BrowserEngine: NSObject, ObservableObject, WKNavigationDelegate {
-    @Published var tabs: [TabItem] = []
+class BrowserEngine: ObservableObject {
+    @Published var tabs: [Tab] = []
     @Published var activeTabId: UUID = UUID()
-    @Published var activeWebView: WKWebView!
-
-    // make sure to update SwiftUI after WKWebView updates
-    @Published var currentURL: String = ""
-    @Published var isLoading: Bool = false
-    @Published var canGoBack: Bool = false
-    @Published var canGoForward: Bool = false
-    @Published var pageTitle: String = ""
-    @Published var isSecure: Bool = false
+    @Published var activeTab: Tab? = nil
+    
     @Published var isOnline: Bool = true
 
-    var observations: [NSKeyValueObservation] = []
-    var failedURL: String?
-    let monitor = NWPathMonitor()
-    let monitorQueue = DispatchQueue(label: "connectivity")
+    private let monitor = NWPathMonitor()
+    private let monitorQueue = DispatchQueue(label: "connectivity")
     
-    var inactivityTimer: Timer?
-    var memoryPressureSource: DispatchSourceMemoryPressure?
+    private var inactivityTimer: Timer?
+    private var memoryPressureSource: DispatchSourceMemoryPressure?
 
-    override init() {
-        super.init()
-
+    init() {
         monitor.pathUpdateHandler = { [weak self] path in
             DispatchQueue.main.async {
                 self?.isOnline = path.status == .satisfied
@@ -39,9 +28,7 @@ class BrowserEngine: NSObject, ObservableObject, WKNavigationDelegate {
         let defaultTab = createNewTab(with: "https://duckduckgo.com")
         self.tabs = [defaultTab]
         self.activeTabId = defaultTab.id
-        self.activeWebView = defaultTab.webView!
-        
-        setupObservations(for: defaultTab.webView!)
+        self.activeTab = defaultTab
         
         startInactivityTimer()
         setupMemoryPressureListener()
@@ -52,73 +39,173 @@ class BrowserEngine: NSObject, ObservableObject, WKNavigationDelegate {
         memoryPressureSource?.cancel()
     }
 
-    func setupObservations(for webView: WKWebView) {
-        observations.forEach { $0.invalidate() }
-        observations = [
-            webView.observe(\.url) { [weak self] webView, _ in
-                DispatchQueue.main.async {
-                    self?.currentURL = webView.url?.absoluteString ?? ""
-                    self?.updateTabState(for: webView)
-                }
-            },
-            webView.observe(\.isLoading) { [weak self] webView, _ in
-                DispatchQueue.main.async {
-                    self?.isLoading = webView.isLoading
-                }
-            },
-            webView.observe(\.canGoBack) { [weak self] webView, _ in
-                DispatchQueue.main.async {
-                    self?.canGoBack = webView.canGoBack
-                }
-            },
-            webView.observe(\.canGoForward) { [weak self] webView, _ in
-                DispatchQueue.main.async {
-                    self?.canGoForward = webView.canGoForward
-                }
-            },
-            webView.observe(\.title) { [weak self] webView, _ in
-                DispatchQueue.main.async {
-                    self?.pageTitle = webView.title ?? ""
-                    self?.updateTabState(for: webView)
-                }
-            },
-            webView.observe(\.hasOnlySecureContent) { [weak self] webView, _ in
-                DispatchQueue.main.async {
-                    self?.isSecure = webView.hasOnlySecureContent
-                    self?.updateTabState(for: webView)
-                }
-            },
-        ]
+    func createNewTab(with urlString: String = "https://duckduckgo.com") -> Tab {
+        let config = WKWebViewConfiguration()
+        let webView = WKWebView(frame: .zero, configuration: config)
+        
+        let fallbackUA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15"
+        webView.customUserAgent = fallbackUA
+        
+        let tab = Tab(
+            id: UUID(),
+            title: "New Tab",
+            state: .active(webView),
+            lastActiveTime: Date()
+        )
+        
+        upgradeToNativeUserAgent(for: webView)
+        if let url = URL(string: urlString) {
+            webView.load(URLRequest(url: url))
+        }
+        
+        return tab
     }
 
-    func navigate(to input: String) {
-        failedURL = nil
-        let trimmed = input.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
-
-        let url: URL
-        if trimmed.contains("://") || trimmed.contains(".") && !trimmed.contains(" ") {
-            let withScheme = trimmed.contains("://") ? trimmed : "https://" + trimmed
-            guard let resolved = URL(string: withScheme) else { return }
-            url = resolved
-        } else {
-            guard let query = trimmed.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-                  let searchURL = URL(string: "https://duckduckgo.com/?q=\(query)") else { return }
-            url = searchURL
-        }
-
-        activeWebView.load(URLRequest(url: url))
+    func addNewTab(urlString: String = "https://duckduckgo.com") {
+        let tab = createNewTab(with: urlString)
+        tabs.append(tab)
+        selectTab(id: tab.id)
     }
 
-    func goBack() { failedURL = nil; activeWebView.goBack() }
-    func goForward() { failedURL = nil; activeWebView.goForward() }
-    
-    func reload() {
-        if let failedURL, !failedURL.isEmpty {
-            navigate(to: failedURL)
-            self.failedURL = nil
-        } else {
-            activeWebView.reload()
+    func selectTab(id: UUID) {
+        guard let index = tabs.firstIndex(where: { $0.id == id }) else { return }
+        activeTabId = id
+        activeTab = tabs[index]
+        tabs[index].lastActiveTime = Date()
+        
+        if tabs[index].webView == nil {
+            restoreTab(at: index)
         }
+        
+        enforceLRULimit()
+    }
+
+    func closeTab(id: UUID) {
+        guard let index = tabs.firstIndex(where: { $0.id == id }) else { return }
+        let closedTab = tabs.remove(at: index)
+        closedTab.webView?.stopLoading()
+        closedTab.webView?.navigationDelegate = nil
+        
+        if activeTabId == id {
+            if !tabs.isEmpty {
+                let newIndex = min(index, tabs.count - 1)
+                selectTab(id: tabs[newIndex].id)
+            } else {
+                addNewTab()
+            }
+        }
+    }
+
+    private func restoreTab(at index: Int) {
+        let config = WKWebViewConfiguration()
+        let webView = WKWebView(frame: .zero, configuration: config)
+        
+        let fallbackUA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15"
+        webView.customUserAgent = fallbackUA
+        
+        let savedState = tabs[index].interactionState
+        let savedURL = tabs[index].url
+        
+        webView.navigationDelegate = tabs[index]
+        tabs[index].state = .active(webView)
+        tabs[index].setupObservations(for: webView)
+        upgradeToNativeUserAgent(for: webView)
+        
+        if let state = savedState {
+            webView.interactionState = state
+        } else if let url = URL(string: savedURL) {
+            webView.load(URLRequest(url: url))
+        }
+    }
+
+    private func suspendTab(at index: Int) {
+        guard index >= 0 && index < tabs.count else { return }
+        guard tabs[index].id != activeTabId else { return }
+        guard let webView = tabs[index].webView else { return }
+        
+        let interactionState = webView.interactionState
+        let lastURL = webView.url ?? URL(string: tabs[index].url) ?? URL(string: "https://duckduckgo.com")!
+        
+        webView.stopLoading()
+        webView.navigationDelegate = nil
+        
+        tabs[index].state = .suspended(interactionState: interactionState, lastURL: lastURL)
+        print("Suspended background tab: \(tabs[index].title)")
+    }
+
+    private func enforceLRULimit() {
+        let activeTabs = tabs.filter { $0.webView != nil && $0.id != activeTabId }
+        guard activeTabs.count > 3 else { return } // Max 4 active (1 active, 3 background)
+        
+        if let oldest = activeTabs.min(by: { $0.lastActiveTime < $1.lastActiveTime }),
+           let index = tabs.firstIndex(where: { $0.id == oldest.id }) {
+            suspendTab(at: index)
+        }
+    }
+
+    private func startInactivityTimer() {
+        inactivityTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+            let now = Date()
+            for i in 0..<self.tabs.count {
+                let tab = self.tabs[i]
+                if tab.id != self.activeTabId && tab.webView != nil {
+                    let idleTime = now.timeIntervalSince(tab.lastActiveTime)
+                    if idleTime > 600 { // 10 minutes
+                        self.suspendTab(at: i)
+                    }
+                }
+            }
+        }
+    }
+
+    private func setupMemoryPressureListener() {
+        let source = DispatchSource.makeMemoryPressureSource(eventMask: [.warning, .critical], queue: DispatchQueue.main)
+        source.setEventHandler { [weak self] in
+            guard let self = self else { return }
+            print("Low memory signal. Suspending all background tabs.")
+            self.suspendAllBackgroundTabs()
+        }
+        source.resume()
+        self.memoryPressureSource = source
+    }
+
+    private func suspendAllBackgroundTabs() {
+        for i in 0..<tabs.count {
+            if tabs[i].id != activeTabId {
+                suspendTab(at: i)
+            }
+        }
+    }
+
+    private func upgradeToNativeUserAgent(for webView: WKWebView) {
+        webView.evaluateJavaScript("navigator.userAgent") { [weak self] result, error in
+            guard let self = self, let nativeUA = result as? String else { return }
+
+            var productionUA = nativeUA
+
+            if let appTokenRange = productionUA.range(of: " gita/") {
+                productionUA = String(productionUA[..<appTokenRange.lowerBound])
+            }
+
+            if !productionUA.contains("Safari/") {
+                let webKitVersion = self.extractWebKitVersion(from: productionUA) ?? "605.1.15"
+                productionUA += " Version/18.0 Safari/\(webKitVersion)"
+            }
+
+            DispatchQueue.main.async {
+                webView.customUserAgent = productionUA
+                print("Strategy A Active. Production UA: \(productionUA)")
+            }
+        }
+    }
+
+    private func extractWebKitVersion(from ua: String) -> String? {
+        guard let range = ua.range(of: "AppleWebKit/") else { return nil }
+        let subString = ua[range.upperBound...]
+        if let spaceIndex = subString.firstIndex(of: " ") {
+            return String(subString[..<spaceIndex])
+        }
+        return String(subString)
     }
 }
