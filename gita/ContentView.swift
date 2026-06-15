@@ -368,13 +368,14 @@ class BrowserEngine: NSObject, ObservableObject, WKNavigationDelegate {
     }
 
     private func updateTabState(for webView: WKWebView) {
-        guard let index = tabs.firstIndex(where: { $0.webView === webView }) else { return }
-        
         let title = webView.title ?? ""
         let url = webView.url?.absoluteString ?? ""
         let isSecure = webView.hasOnlySecureContent
         
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self,
+                  let index = self.tabs.firstIndex(where: { $0.webView === webView }) else { return }
+            
             self.tabs[index].title = title.isEmpty ? "New Tab" : title
             self.tabs[index].url = url
             self.tabs[index].isSecure = isSecure
