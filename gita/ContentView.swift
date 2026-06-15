@@ -1,4 +1,5 @@
 import SwiftUI
+import WebKit
 
 @main struct MyApp: App {
     var body: some Scene {
@@ -10,11 +11,19 @@ import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        Text("Hello, world!")
-            .padding()
+        WebView(url: URL(string: "https://duckduckgo.com")!)
     }
 }
 
-#Preview {
-    ContentView()
+struct WebView: NSViewRepresentable {
+    let url: URL
+
+    func makeNSView(context: Context) -> WKWebView {
+        WKWebView()
+    }
+
+    func updateNSView(_ nsView: WKWebView, context: Context) {
+        let request = URLRequest(url: url)
+        nsView.load(request)
+    }
 }
