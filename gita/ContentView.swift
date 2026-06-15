@@ -45,22 +45,34 @@ class BrowserEngine: NSObject, ObservableObject, WKNavigationDelegate {
 
         observations = [
             webView.observe(\.url) { [weak self] webView, _ in
-                self?.currentURL = webView.url?.absoluteString ?? ""
+                DispatchQueue.main.async {
+                    self?.currentURL = webView.url?.absoluteString ?? ""
+                }
             },
             webView.observe(\.isLoading) { [weak self] webView, _ in
-                self?.isLoading = webView.isLoading
+                DispatchQueue.main.async {
+                    self?.isLoading = webView.isLoading
+                }
             },
             webView.observe(\.canGoBack) { [weak self] webView, _ in
-                self?.canGoBack = webView.canGoBack
+                DispatchQueue.main.async {
+                    self?.canGoBack = webView.canGoBack
+                }
             },
             webView.observe(\.canGoForward) { [weak self] webView, _ in
-                self?.canGoForward = webView.canGoForward
+                DispatchQueue.main.async {
+                    self?.canGoForward = webView.canGoForward
+                }
             },
             webView.observe(\.title) { [weak self] webView, _ in
-                self?.pageTitle = webView.title ?? ""
+                DispatchQueue.main.async {
+                    self?.pageTitle = webView.title ?? ""
+                }
             },
             webView.observe(\.hasOnlySecureContent) { [weak self] webView, _ in
-                self?.isSecure = webView.hasOnlySecureContent
+                DispatchQueue.main.async {
+                    self?.isSecure = webView.hasOnlySecureContent
+                }
             },
         ]
 
