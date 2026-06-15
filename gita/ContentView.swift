@@ -168,6 +168,7 @@ class BrowserEngine: NSObject, ObservableObject, WKNavigationDelegate {
     func closeTab(id: UUID) {
         guard let index = tabs.firstIndex(where: { $0.id == id }) else { return }
         let closedTab = tabs.remove(at: index)
+        closedTab.webView?.stopLoading()
         closedTab.webView?.navigationDelegate = nil
         
         if activeTabId == id {
@@ -204,6 +205,7 @@ class BrowserEngine: NSObject, ObservableObject, WKNavigationDelegate {
         guard let webView = tabs[index].webView else { return }
         
         tabs[index].interactionState = webView.interactionState
+        webView.stopLoading()
         webView.navigationDelegate = nil
         tabs[index].webView = nil
         print("Suspended background tab: \(tabs[index].title)")
