@@ -191,6 +191,7 @@ struct ContentView: View {
 struct AddressBar: View {
     @ObservedObject var engine: BrowserEngine
     @State private var textFieldURL: String = ""
+    @FocusState private var isFocused: Bool
 
     var body: some View {
         HStack(spacing: 8) {
@@ -213,6 +214,7 @@ struct AddressBar: View {
                 .font(.caption)
 
             TextField("Search or enter address", text: $textFieldURL)
+                .focused($isFocused)
                 .textFieldStyle(.plain)
                 .font(.system(size: 13))
                 .padding(.horizontal, 8)
@@ -232,7 +234,7 @@ struct AddressBar: View {
         .padding(8)
         .background(.bar)
         .onChange(of: engine.currentURL) { _, newValue in
-            textFieldURL = newValue
+            if !isFocused { textFieldURL = newValue }
         }
     }
 }
