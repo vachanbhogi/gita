@@ -25,6 +25,7 @@ class BrowserEngine: NSObject, ObservableObject, WKNavigationDelegate {
     @Published var isOnline: Bool = true
 
     private var observations: [NSKeyValueObservation] = []
+    private var failedURL: String?
     private let monitor = NWPathMonitor()
     private let monitorQueue = DispatchQueue(label: "connectivity")
 
@@ -108,6 +109,7 @@ class BrowserEngine: NSObject, ObservableObject, WKNavigationDelegate {
     }
 
     func navigate(to input: String) {
+        failedURL = nil
         let trimmed = input.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
 
@@ -125,9 +127,16 @@ class BrowserEngine: NSObject, ObservableObject, WKNavigationDelegate {
         webView.load(URLRequest(url: url))
     }
 
-    func goBack() { webView.goBack() }
-    func goForward() { webView.goForward() }
-    func reload() { webView.reload() }
+    func goBack() { failedURL = nil; webView.goBack() }
+    func goForward() { failedURL = nil; webView.goForward() }
+    func reload() {
+        if let failedURL, !failedURL.isEmpty {
+            navigate(to: failedURL)
+            self.failedURL = nil
+        } else {
+            webView.reload()
+        }
+    }
 
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
         let nsError = error as NSError
@@ -158,6 +167,8 @@ class BrowserEngine: NSObject, ObservableObject, WKNavigationDelegate {
             message = error.localizedDescription
         }
 
+        failedURL = url
+        if !url.isEmpty { failedURL = url }
         showErrorPage(title: title, message: message, url: url)
     }
 
