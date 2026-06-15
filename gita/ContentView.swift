@@ -151,10 +151,19 @@ class BrowserEngine: NSObject, ObservableObject, WKNavigationDelegate {
     }
 
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        handleNavigationError(error)
+    }
+
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+        handleNavigationError(error)
+    }
+
+    private func handleNavigationError(_ error: Error) {
         let nsError = error as NSError
         let title: String
         let message: String
-        let url = (nsError.userInfo[NSURLErrorFailingURLErrorKey] as? URL)?.absoluteString ?? ""
+        let url = (nsError.userInfo[NSURLErrorFailingURLErrorKey] as? URL)?.absoluteString
+            ?? (webView.url?.absoluteString ?? "")
 
         if nsError.domain == NSURLErrorDomain {
             switch nsError.code {
@@ -179,7 +188,6 @@ class BrowserEngine: NSObject, ObservableObject, WKNavigationDelegate {
             message = error.localizedDescription
         }
 
-        failedURL = url
         if !url.isEmpty { failedURL = url }
         showErrorPage(title: title, message: message, url: url)
     }
