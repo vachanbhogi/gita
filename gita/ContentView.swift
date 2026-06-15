@@ -25,7 +25,7 @@ struct TabItem: Identifiable {
 class BrowserEngine: NSObject, ObservableObject, WKNavigationDelegate {
     @Published var tabs: [TabItem] = []
     @Published var activeTabId: UUID = UUID()
-    @Published var activeWebView: WKWebView = WKWebView()
+    @Published var activeWebView: WKWebView!
 
     // make sure to update SwiftUI after WKWebView updates
     @Published var currentURL: String = ""
@@ -168,6 +168,7 @@ class BrowserEngine: NSObject, ObservableObject, WKNavigationDelegate {
     func closeTab(id: UUID) {
         guard let index = tabs.firstIndex(where: { $0.id == id }) else { return }
         let closedTab = tabs.remove(at: index)
+        closedTab.webView?.stopLoading()
         closedTab.webView?.navigationDelegate = nil
         
         if activeTabId == id {
@@ -204,6 +205,7 @@ class BrowserEngine: NSObject, ObservableObject, WKNavigationDelegate {
         guard let webView = tabs[index].webView else { return }
         
         tabs[index].interactionState = webView.interactionState
+        webView.stopLoading()
         webView.navigationDelegate = nil
         tabs[index].webView = nil
         print("Suspended background tab: \(tabs[index].title)")
@@ -317,28 +319,34 @@ class BrowserEngine: NSObject, ObservableObject, WKNavigationDelegate {
     }
 
     func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
-        DispatchQueue.main.async {
-            self.failedURL = nil
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            if webView === self.activeWebView {
+                self.failedURL = nil
+            }
         }
     }
 
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
-        handleNavigationError(error)
+        handleNavigationError(error, for: webView)
     }
 
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
-        handleNavigationError(error)
+        handleNavigationError(error, for: webView)
     }
 
-    private func handleNavigationError(_ error: Error) {
+    private func handleNavigationError(_ error: Error, for webView: WKWebView) {
         let nsError = error as NSError
         let title: String
         let message: String
         let url = (nsError.userInfo[NSURLErrorFailingURLErrorKey] as? URL)?.absoluteString
-            ?? (activeWebView.url?.absoluteString ?? "")
+            ?? (webView.url?.absoluteString ?? "")
 
-        DispatchQueue.main.async {
-            self.failedURL = url
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            if webView === self.activeWebView {
+                self.failedURL = url
+            }
         }
 
         if nsError.domain == NSURLErrorDomain {
@@ -364,17 +372,18 @@ class BrowserEngine: NSObject, ObservableObject, WKNavigationDelegate {
             message = error.localizedDescription
         }
 
-        showErrorPage(title: title, message: message, url: url)
+        showErrorPage(title: title, message: message, url: url, on: webView)
     }
 
     private func updateTabState(for webView: WKWebView) {
-        guard let index = tabs.firstIndex(where: { $0.webView === webView }) else { return }
-        
         let title = webView.title ?? ""
         let url = webView.url?.absoluteString ?? ""
         let isSecure = webView.hasOnlySecureContent
         
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self,
+                  let index = self.tabs.firstIndex(where: { $0.webView === webView }) else { return }
+            
             self.tabs[index].title = title.isEmpty ? "New Tab" : title
             self.tabs[index].url = url
             self.tabs[index].isSecure = isSecure
@@ -387,7 +396,7 @@ class BrowserEngine: NSObject, ObservableObject, WKNavigationDelegate {
         }
     }
 
-    private func showErrorPage(title: String, message: String, url: String) {
+    private func showErrorPage(title: String, message: String, url: String, on webView: WKWebView) {
         let html = """
         <html>
         <body style="font-family:system-ui,-apple-system;padding:2em 1.5em;background:#f5f5f7;color:#1d1d1f">
@@ -397,7 +406,7 @@ class BrowserEngine: NSObject, ObservableObject, WKNavigationDelegate {
         </body>
         </html>
         """
-        activeWebView.loadHTMLString(html, baseURL: nil)
+        webView.loadHTMLString(html, baseURL: nil)
     }
 }
 
