@@ -46,6 +46,7 @@ struct SidebarTabItem: View {
               )
           }
           .buttonStyle(PressableButtonStyle())
+          .help("Close tab")
         }
       }
       .padding(.horizontal, 8)
