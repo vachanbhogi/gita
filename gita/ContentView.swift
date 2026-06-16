@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ContentView: View {
-  @State private var engine = BrowserEngine.shared
+  let engine: BrowserEngine
 
   var body: some View {
     ZStack(alignment: .top) {
@@ -35,7 +35,6 @@ struct ContentView: View {
     if let activeTab = engine.activeTab {
       if let webView = activeTab.webView {
         BrowserView(webView: webView)
-          .id(activeTab.id)
           .background(Color(NSColor.windowBackgroundColor))
       } else {
         ZStack {
