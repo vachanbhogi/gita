@@ -17,8 +17,15 @@ struct ContentView: View {
                 // Unified Safari-style chrome bar inside the title bar space
                 ChromeBar(engine: engine)
 
-                // Web content — fills everything below
-                webContent
+                HStack(spacing: 0) {
+                    if engine.isVerticalTabs && engine.sidebarVisible {
+                        SidebarView(engine: engine)
+                            .transition(.move(edge: .leading))
+                    }
+
+                    // Web content — fills everything below
+                    webContent
+                }
             }
         }
         .frame(minWidth: 1100, minHeight: 720)

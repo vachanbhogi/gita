@@ -18,6 +18,8 @@ class BrowserEngine {
     
     var isOnline: Bool = true
     var isAddressBarFocused: Bool = false
+    var isVerticalTabs: Bool = false
+    var sidebarVisible: Bool = true
 
     private let monitor = NWPathMonitor()
     private let monitorQueue = DispatchQueue(label: "connectivity")

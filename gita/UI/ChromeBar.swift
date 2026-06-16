@@ -8,7 +8,6 @@ import SwiftUI
 @MainActor
 struct ChromeBar: View {
     var engine: BrowserEngine
-    @State private var sidebarVisible = false
     @State private var tabContainerWidth: CGFloat = 800
     @State private var hoveringNewTab = false
 
@@ -16,8 +15,10 @@ struct ChromeBar: View {
         VStack(spacing: 0) {
             toolbarRow
             
-            tabStrip
-                .background(Color.primary.opacity(0.03))
+            if !engine.isVerticalTabs {
+                tabStrip
+                    .background(Color.primary.opacity(0.03))
+            }
         }
         .background(
             VisualEffectView(material: .headerView, blendingMode: .behindWindow)
@@ -39,7 +40,12 @@ struct ChromeBar: View {
             // Sidebar toggle
             ChromeButton(icon: "sidebar.leading", size: 13) {
                 withAnimation(.spring(response: 0.28, dampingFraction: 0.82)) {
-                    sidebarVisible.toggle()
+                    if !engine.isVerticalTabs {
+                        engine.isVerticalTabs = true
+                        engine.sidebarVisible = true
+                    } else {
+                        engine.sidebarVisible.toggle()
+                    }
                 }
             }
 
@@ -64,6 +70,16 @@ struct ChromeBar: View {
             // Trailing controls
             ChromeButton(icon: "square.and.arrow.up", size: 12.5) {}
             ChromeButton(icon: "textformat.size", size: 12) {}
+            
+            // Layout switcher
+            ChromeButton(
+                icon: engine.isVerticalTabs ? "rectangle.split.1x2" : "rectangle.split.2x1",
+                size: 13
+            ) {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.82)) {
+                    engine.isVerticalTabs.toggle()
+                }
+            }
 
             // New tab — rightmost
             ChromeButton(icon: "plus", size: 13) {
