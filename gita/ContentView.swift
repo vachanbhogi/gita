@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
   let engine: BrowserEngine
+  let uiState: UIState
 
   var body: some View {
     ZStack(alignment: .top) {
@@ -12,11 +13,11 @@ struct ContentView: View {
         .ignoresSafeArea()
 
       VStack(spacing: 0) {
-        ChromeBar(engine: engine)
+        ChromeBar(engine: engine, uiState: uiState)
 
         HStack(spacing: 0) {
-          if engine.isVerticalTabs && engine.sidebarVisible {
-            SidebarView(engine: engine)
+          if uiState.isVerticalTabs && uiState.sidebarVisible {
+            SidebarView(engine: engine, uiState: uiState)
               .transition(.move(edge: .leading))
           }
 

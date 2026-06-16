@@ -10,12 +10,6 @@ class BrowserEngine {
   var activeTabId: UUID = UUID()
   var activeTab: Tab? = nil
 
-  var isAddressBarFocused: Bool = false
-  var isVerticalTabs: Bool = false
-  var sidebarVisible: Bool = true
-  var isSidebarFocused: Bool = false
-  var sidebarFocusedIndex: Int = 0
-
   private var inactivityTimer: Timer?
   private var memoryPressureSource: DispatchSourceMemoryPressure?
 
@@ -60,12 +54,12 @@ class BrowserEngine {
     return tab
   }
 
-  func addNewTab(urlString: String = "https://duckduckgo.com") {
+  func addNewTab(urlString: String = "https://duckduckgo.com", uiState: UIState) {
     let tab = createNewTab(with: urlString)
     withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
       tabs.append(tab)
       selectTab(id: tab.id)
-      sidebarFocusedIndex = tabs.count - 1
+      uiState.sidebarFocusedIndex = tabs.count - 1
     }
   }
 
@@ -74,7 +68,6 @@ class BrowserEngine {
     activeTabId = id
     activeTab = tabs[index]
     tabs[index].lastActiveTime = Date()
-    sidebarFocusedIndex = index
 
     if tabs[index].webView == nil {
       restoreTab(at: index)
@@ -83,7 +76,7 @@ class BrowserEngine {
     enforceLRULimit()
   }
 
-  func closeTab(id: UUID) {
+  func closeTab(id: UUID, uiState: UIState) {
     guard let index = tabs.firstIndex(where: { $0.id == id }) else { return }
     withAnimation(.spring(response: 0.32, dampingFraction: 0.82)) {
       let closedTab = tabs.remove(at: index)
@@ -95,12 +88,12 @@ class BrowserEngine {
           let newIndex = min(index, tabs.count - 1)
           selectTab(id: tabs[newIndex].id)
         } else {
-          addNewTab()
+          addNewTab(uiState: uiState)
         }
       }
 
-      if sidebarFocusedIndex >= tabs.count {
-        sidebarFocusedIndex = max(0, tabs.count - 1)
+      if uiState.sidebarFocusedIndex >= tabs.count {
+        uiState.sidebarFocusedIndex = max(0, tabs.count - 1)
       }
     }
   }
@@ -131,33 +124,33 @@ class BrowserEngine {
     selectTab(id: tabs[tabs.count - 1].id)
   }
 
-  func toggleSidebarFocus() {
-    if isSidebarFocused {
-      isSidebarFocused = false
+  func toggleSidebarFocus(uiState: UIState) {
+    if uiState.isSidebarFocused {
+      uiState.isSidebarFocused = false
     } else {
-      focusSidebar()
+      focusSidebar(uiState: uiState)
     }
   }
 
-  func focusSidebar() {
-    if !isVerticalTabs {
+  func focusSidebar(uiState: UIState) {
+    if !uiState.isVerticalTabs {
       withAnimation(.spring(response: 0.3, dampingFraction: 0.82)) {
-        isVerticalTabs = true
-        sidebarVisible = true
+        uiState.isVerticalTabs = true
+        uiState.sidebarVisible = true
       }
-    } else if !sidebarVisible {
+    } else if !uiState.sidebarVisible {
       withAnimation(.spring(response: 0.3, dampingFraction: 0.82)) {
-        sidebarVisible = true
+        uiState.sidebarVisible = true
       }
     }
 
     if let activeIndex = tabs.firstIndex(where: { $0.id == activeTabId }) {
-      sidebarFocusedIndex = activeIndex
+      uiState.sidebarFocusedIndex = activeIndex
     } else {
-      sidebarFocusedIndex = 0
+      uiState.sidebarFocusedIndex = 0
     }
 
-    isSidebarFocused = true
+    uiState.isSidebarFocused = true
   }
 
   private func restoreTab(at index: Int) {
