@@ -1,235 +1,247 @@
 import Foundation
-import WebKit
 import Observation
+import WebKit
 
 @Observable
 @MainActor
 class Tab: NSObject, WKNavigationDelegate, Identifiable {
-    let id: UUID
-    var title: String
-    var state: TabState
-    var lastActiveTime: Date
-    private var observations: [NSKeyValueObservation] = []
-    var failedURL: String?
-    
-    var url: String = ""
-    var isSecure: Bool = false
-    var canGoBack: Bool = false
-    var canGoForward: Bool = false
-    var faviconURL: URL? = nil
-    
-    init(id: UUID = UUID(), title: String = "New Tab", state: TabState, lastActiveTime: Date = Date()) {
-        self.id = id
-        self.title = title
-        self.state = state
-        self.lastActiveTime = lastActiveTime
-        super.init()
-        
-        if let webView = self.webView {
-            webView.navigationDelegate = self
-            setupObservations(for: webView)
-            
-            self.url = webView.url?.absoluteString ?? ""
-            if let host = webView.url?.host {
-                self.faviconURL = URL(string: "https://www.google.com/s2/favicons?sz=32&domain=\(host)")
-            }
-            self.isSecure = webView.hasOnlySecureContent
-            self.canGoBack = webView.canGoBack
-            self.canGoForward = webView.canGoForward
-        }
-    }
-    
-    var webView: WKWebView? {
-        switch state {
-        case .active(let wv), .loading(let wv, _):
-            return wv
-        default:
-            return nil
-        }
-    }
+  let id: UUID
+  var title: String
+  var state: TabState
+  var lastActiveTime: Date
+  private var observations: [NSKeyValueObservation] = []
+  var failedURL: String?
 
-    var interactionState: Any? {
-        switch state {
-        case .suspended(let interactionState, _):
-            return interactionState
-        default:
-            return nil
-        }
-    }
+  var url: String = ""
+  var isSecure: Bool = false
+  var canGoBack: Bool = false
+  var canGoForward: Bool = false
+  var faviconURL: URL? = nil
 
-    var isLoading: Bool {
-        switch state {
-        case .loading:
-            return true
-        default:
-            return false
-        }
-    }
+  init(id: UUID = UUID(), title: String = "New Tab", state: TabState, lastActiveTime: Date = Date())
+  {
+    self.id = id
+    self.title = title
+    self.state = state
+    self.lastActiveTime = lastActiveTime
+    super.init()
 
-    var isSuspended: Bool {
-        if case .suspended = state { return true }
-        return false
-    }
+    if let webView = self.webView {
+      webView.navigationDelegate = self
+      setupObservations(for: webView)
 
-    func setupObservations(for webView: WKWebView) {
-        observations.forEach { $0.invalidate() }
-        observations = [
-            webView.observe(\.url) { [weak self] webView, _ in
-                Task { @MainActor [weak self] in
-                    guard let self = self else { return }
-                    let urlString = webView.url?.absoluteString ?? ""
-                    self.url = urlString
-                    if let url = webView.url, let host = url.host {
-                        self.faviconURL = URL(string: "https://www.google.com/s2/favicons?sz=32&domain=\(host)")
-                    } else {
-                        self.faviconURL = nil
-                    }
-                    self.updateMetadata(for: webView)
-                }
-            },
-            webView.observe(\.isLoading) { [weak self] webView, _ in
-                Task { @MainActor [weak self] in
-                    guard let self = self else { return }
-                    self.updateMetadata(for: webView)
-                }
-            },
-            webView.observe(\.canGoBack) { [weak self] webView, _ in
-                Task { @MainActor [weak self] in
-                    guard let self = self else { return }
-                    self.canGoBack = webView.canGoBack
-                }
-            },
-            webView.observe(\.canGoForward) { [weak self] webView, _ in
-                Task { @MainActor [weak self] in
-                    guard let self = self else { return }
-                    self.canGoForward = webView.canGoForward
-                }
-            },
-            webView.observe(\.title) { [weak self] webView, _ in
-                Task { @MainActor [weak self] in
-                    guard let self = self else { return }
-                    self.updateMetadata(for: webView)
-                }
-            },
-            webView.observe(\.hasOnlySecureContent) { [weak self] webView, _ in
-                Task { @MainActor [weak self] in
-                    guard let self = self else { return }
-                    self.isSecure = webView.hasOnlySecureContent
-                }
-            },
-        ]
+      self.url = webView.url?.absoluteString ?? ""
+      if let host = webView.url?.host {
+        self.faviconURL = URL(string: "https://www.google.com/s2/favicons?sz=32&domain=\(host)")
+      }
+      self.isSecure = webView.hasOnlySecureContent
+      self.canGoBack = webView.canGoBack
+      self.canGoForward = webView.canGoForward
     }
-    
-    private func updateMetadata(for webView: WKWebView) {
-        let title = webView.title ?? ""
-        self.title = title.isEmpty ? "New Tab" : title
-        
-        let progress = webView.estimatedProgress
-        if webView.isLoading {
-            self.state = .loading(webView, progress: progress)
-        } else {
-            self.state = .active(webView)
-        }
-    }
-    
-    func navigate(to input: String) {
-        failedURL = nil
-        guard let webView = webView else { return }
-        
-        let trimmed = input.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
+  }
 
-        // Heuristic: contains a dot without a space → likely a hostname, not a search query
-        let url: URL
-        if trimmed.contains("://") || trimmed.contains(".") && !trimmed.contains(" ") {
-            let withScheme = trimmed.contains("://") ? trimmed : "https://" + trimmed
-            guard let resolved = URL(string: withScheme) else { return }
-            url = resolved
-        } else {
-            guard let query = trimmed.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-                  let searchURL = URL(string: "https://duckduckgo.com/?q=\(query)") else { return }
-            url = searchURL
-        }
-
-        webView.load(URLRequest(url: url))
+  var webView: WKWebView? {
+    switch state {
+    case .active(let wv), .loading(let wv, _):
+      return wv
+    default:
+      return nil
     }
+  }
 
-    func goBack() { failedURL = nil; webView?.goBack() }
-    func goForward() { failedURL = nil; webView?.goForward() }
-    
-    func reload() {
-        if let failedURL, !failedURL.isEmpty {
-            navigate(to: failedURL)
-            self.failedURL = nil
-        } else {
-            webView?.reload()
-        }
+  var interactionState: Any? {
+    switch state {
+    case .suspended(let interactionState, _):
+      return interactionState
+    default:
+      return nil
     }
-    
-    // MARK: - WKNavigationDelegate
-    func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+  }
+
+  var isLoading: Bool {
+    switch state {
+    case .loading:
+      return true
+    default:
+      return false
+    }
+  }
+
+  var isSuspended: Bool {
+    if case .suspended = state { return true }
+    return false
+  }
+
+  func setupObservations(for webView: WKWebView) {
+    for observation in observations { observation.invalidate() }
+    observations = [
+      webView.observe(\.url) { [weak self] webView, _ in
         Task { @MainActor [weak self] in
-            self?.failedURL = nil
-            if let wv = self?.webView {
-                self?.state = .loading(wv, progress: 0)
-            }
+          guard let self = self else { return }
+          let urlString = webView.url?.absoluteString ?? ""
+          self.url = urlString
+          if let url = webView.url, let host = url.host {
+            self.faviconURL = URL(string: "https://www.google.com/s2/favicons?sz=32&domain=\(host)")
+          } else {
+            self.faviconURL = nil
+          }
+          self.updateMetadata(for: webView)
         }
-    }
-
-    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+      },
+      webView.observe(\.isLoading) { [weak self] webView, _ in
         Task { @MainActor [weak self] in
-            self?.state = .active(webView)
-            let title = webView.title ?? ""
-            self?.title = title.isEmpty ? "New Tab" : title
+          guard let self = self else { return }
+          self.updateMetadata(for: webView)
         }
-    }
-
-    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
-        handleNavigationError(error, for: webView)
-    }
-
-    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
-        handleNavigationError(error, for: webView)
-    }
-
-    private func handleNavigationError(_ error: Error, for webView: WKWebView) {
-        let nsError = error as NSError
-        let url = (nsError.userInfo[NSURLErrorFailingURLErrorKey] as? URL)?.absoluteString
-            ?? (webView.url?.absoluteString ?? "")
-        let failingURL = URL(string: url) ?? URL(string: "https://duckduckgo.com")!
-
-        let title: String
-        let message: String
-
-        if nsError.domain == NSURLErrorDomain {
-            switch nsError.code {
-            case NSURLErrorNotConnectedToInternet:
-                title = "No Connection"
-                message = "You are offline. Check your network and try again."
-            case NSURLErrorCannotFindHost, NSURLErrorDNSLookupFailed:
-                title = "Server Not Found"
-                message = "Could not resolve the server address."
-            case NSURLErrorTimedOut:
-                title = "Connection Timed Out"
-                message = "The server did not respond in time."
-            case NSURLErrorSecureConnectionFailed, NSURLErrorServerCertificateUntrusted:
-                title = "Secure Connection Failed"
-                message = "Could not establish a secure connection."
-            default:
-                title = "Failed to Load"
-                message = error.localizedDescription
-            }
-        } else {
-            title = "Failed to Load"
-            message = error.localizedDescription
-        }
-
+      },
+      webView.observe(\.canGoBack) { [weak self] webView, _ in
         Task { @MainActor [weak self] in
-            guard let self = self else { return }
-            self.failedURL = url
-            self.state = .failed(title: title, message: message, failingURL: failingURL)
+          guard let self = self else { return }
+          self.canGoBack = webView.canGoBack
         }
+      },
+      webView.observe(\.canGoForward) { [weak self] webView, _ in
+        Task { @MainActor [weak self] in
+          guard let self = self else { return }
+          self.canGoForward = webView.canGoForward
+        }
+      },
+      webView.observe(\.title) { [weak self] webView, _ in
+        Task { @MainActor [weak self] in
+          guard let self = self else { return }
+          self.updateMetadata(for: webView)
+        }
+      },
+      webView.observe(\.hasOnlySecureContent) { [weak self] webView, _ in
+        Task { @MainActor [weak self] in
+          guard let self = self else { return }
+          self.isSecure = webView.hasOnlySecureContent
+        }
+      },
+    ]
+  }
 
-        ErrorPageRenderer.show(title: title, message: message, url: url, on: webView)
+  private func updateMetadata(for webView: WKWebView) {
+    let title = webView.title ?? ""
+    self.title = title.isEmpty ? "New Tab" : title
+
+    let progress = webView.estimatedProgress
+    if webView.isLoading {
+      self.state = .loading(webView, progress: progress)
+    } else {
+      self.state = .active(webView)
     }
+  }
+
+  func navigate(to input: String) {
+    failedURL = nil
+    guard let webView = webView else { return }
+
+    let trimmed = input.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !trimmed.isEmpty else { return }
+
+    // Heuristic: contains a dot without a space → likely a hostname, not a search query
+    let url: URL
+    if trimmed.contains("://") || trimmed.contains(".") && !trimmed.contains(" ") {
+      let withScheme = trimmed.contains("://") ? trimmed : "https://" + trimmed
+      guard let resolved = URL(string: withScheme) else { return }
+      url = resolved
+    } else {
+      guard let query = trimmed.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+        let searchURL = URL(string: "https://duckduckgo.com/?q=\(query)")
+      else { return }
+      url = searchURL
+    }
+
+    webView.load(URLRequest(url: url))
+  }
+
+  func goBack() {
+    failedURL = nil
+    webView?.goBack()
+  }
+  func goForward() {
+    failedURL = nil
+    webView?.goForward()
+  }
+
+  func reload() {
+    if let failedURL, !failedURL.isEmpty {
+      navigate(to: failedURL)
+      self.failedURL = nil
+    } else {
+      webView?.reload()
+    }
+  }
+
+  // MARK: - WKNavigationDelegate
+  func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+    Task { @MainActor [weak self] in
+      self?.failedURL = nil
+      if let wv = self?.webView {
+        self?.state = .loading(wv, progress: 0)
+      }
+    }
+  }
+
+  func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+    Task { @MainActor [weak self] in
+      self?.state = .active(webView)
+      let title = webView.title ?? ""
+      self?.title = title.isEmpty ? "New Tab" : title
+    }
+  }
+
+  func webView(
+    _ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!,
+    withError error: Error
+  ) {
+    handleNavigationError(error, for: webView)
+  }
+
+  func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+    handleNavigationError(error, for: webView)
+  }
+
+  private func handleNavigationError(_ error: Error, for webView: WKWebView) {
+    let nsError = error as NSError
+    let url =
+      (nsError.userInfo[NSURLErrorFailingURLErrorKey] as? URL)?.absoluteString
+      ?? (webView.url?.absoluteString ?? "")
+    let failingURL = URL(string: url) ?? URL(string: "https://duckduckgo.com")!
+
+    let title: String
+    let message: String
+
+    if nsError.domain == NSURLErrorDomain {
+      switch nsError.code {
+      case NSURLErrorNotConnectedToInternet:
+        title = "No Connection"
+        message = "You are offline. Check your network and try again."
+      case NSURLErrorCannotFindHost, NSURLErrorDNSLookupFailed:
+        title = "Server Not Found"
+        message = "Could not resolve the server address."
+      case NSURLErrorTimedOut:
+        title = "Connection Timed Out"
+        message = "The server did not respond in time."
+      case NSURLErrorSecureConnectionFailed, NSURLErrorServerCertificateUntrusted:
+        title = "Secure Connection Failed"
+        message = "Could not establish a secure connection."
+      default:
+        title = "Failed to Load"
+        message = error.localizedDescription
+      }
+    } else {
+      title = "Failed to Load"
+      message = error.localizedDescription
+    }
+
+    Task { @MainActor [weak self] in
+      guard let self = self else { return }
+      self.failedURL = url
+      self.state = .failed(title: title, message: message, failingURL: failingURL)
+    }
+
+    ErrorPageRenderer.show(title: title, message: message, url: url, on: webView)
+  }
 }

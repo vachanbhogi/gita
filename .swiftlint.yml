@@ -1,0 +1,16 @@
+disabled_rules:
+  - trailing_whitespace
+  - nesting
+  - identifier_name
+  - type_name
+
+opt_in_rules:
+  - sorted_imports
+  - redundant_self
+  - empty_count
+
+included:
+  - gita
+
+excluded:
+  - gita.xcodeproj
