@@ -110,6 +110,7 @@ struct ChromeBar: View {
                         onSelect: { engine.selectTab(id: tab.id) },
                         onClose: { engine.closeTab(id: tab.id) }
                     )
+                    .transition(.asymmetric(insertion: .scale(scale: 0.96).combined(with: .opacity), removal: .opacity))
                 }
                 
                 Button(action: { engine.addNewTab() }) {

@@ -2,6 +2,7 @@ import Foundation
 import WebKit
 import Network
 import Observation
+import SwiftUI
 
 @Observable
 @MainActor
@@ -73,8 +74,10 @@ class BrowserEngine {
 
     func addNewTab(urlString: String = "https://duckduckgo.com") {
         let tab = createNewTab(with: urlString)
-        tabs.append(tab)
-        selectTab(id: tab.id)
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
+            tabs.append(tab)
+            selectTab(id: tab.id)
+        }
     }
 
     func selectTab(id: UUID) {
@@ -92,16 +95,18 @@ class BrowserEngine {
 
     func closeTab(id: UUID) {
         guard let index = tabs.firstIndex(where: { $0.id == id }) else { return }
-        let closedTab = tabs.remove(at: index)
-        closedTab.webView?.stopLoading()
-        closedTab.webView?.navigationDelegate = nil
-        
-        if activeTabId == id {
-            if !tabs.isEmpty {
-                let newIndex = min(index, tabs.count - 1)
-                selectTab(id: tabs[newIndex].id)
-            } else {
-                addNewTab()
+        withAnimation(.spring(response: 0.32, dampingFraction: 0.82)) {
+            let closedTab = tabs.remove(at: index)
+            closedTab.webView?.stopLoading()
+            closedTab.webView?.navigationDelegate = nil
+            
+            if activeTabId == id {
+                if !tabs.isEmpty {
+                    let newIndex = min(index, tabs.count - 1)
+                    selectTab(id: tabs[newIndex].id)
+                } else {
+                    addNewTab()
+                }
             }
         }
     }

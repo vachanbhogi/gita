@@ -35,7 +35,7 @@ struct SidebarView: View {
                         .fill(hoveringNewTab ? Color.primary.opacity(0.08) : Color.primary.opacity(0.04))
                 )
             }
-            .buttonStyle(.plain)
+            .buttonStyle(PressableButtonStyle())
             .onHover { hoveringNewTab = $0 }
             .padding(.horizontal, 8)
             .padding(.bottom, 6)
@@ -43,13 +43,15 @@ struct SidebarView: View {
             // Scrollable tabs list
             ScrollView {
                 VStack(spacing: 2) {
-                    ForEach(engine.tabs) { tab in
+                    ForEach(Array(engine.tabs.enumerated()), id: \.element.id) { idx, tab in
                         SidebarTabItem(
                             tab: tab,
+                            index: idx,
                             isActive: tab.id == engine.activeTabId,
                             onSelect: { engine.selectTab(id: tab.id) },
                             onClose: { engine.closeTab(id: tab.id) }
                         )
+                        .transition(.asymmetric(insertion: .scale(scale: 0.96).combined(with: .opacity), removal: .opacity))
                     }
                 }
                 .padding(.horizontal, 8)
@@ -84,7 +86,7 @@ struct SidebarView: View {
                                 .fill(Color.primary.opacity(0.04))
                         )
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(PressableButtonStyle())
                     
                     Spacer()
                 }
@@ -106,10 +108,12 @@ struct SidebarView: View {
 @MainActor
 struct SidebarTabItem: View {
     var tab: Tab
+    let index: Int
     let isActive: Bool
     let onSelect: () -> Void
     let onClose: () -> Void
     @State private var hovered = false
+    @State private var isAppeared = false
 
     var body: some View {
         Button(action: onSelect) {
@@ -167,7 +171,7 @@ struct SidebarTabItem: View {
                                     .fill(Color.primary.opacity(0.1))
                             )
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(PressableButtonStyle())
                 }
             }
             .padding(.horizontal, 8)
@@ -177,7 +181,15 @@ struct SidebarTabItem: View {
                     .fill(isActive ? Color.primary.opacity(0.08) : (hovered ? Color.primary.opacity(0.04) : Color.clear))
             )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressableButtonStyle())
         .onHover { hovered = $0 }
+        .offset(x: isAppeared ? 0 : -8)
+        .opacity(isAppeared ? 1 : 0)
+        .onAppear {
+            let delay = Double(index) * 0.035
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.8).delay(delay)) {
+                isAppeared = true
+            }
+        }
     }
 }

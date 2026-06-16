@@ -93,7 +93,7 @@ struct SafariTabItem: View {
                 }
             }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressableButtonStyle())
         .onHover { hovered = $0 }
         .animation(.easeOut(duration: 0.08), value: hovered)
         .animation(.easeOut(duration: 0.08), value: isActive)
@@ -133,7 +133,7 @@ struct TabCloseButton: View {
                         .fill(hovered ? Color.primary.opacity(0.12) : Color.clear)
                 )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressableButtonStyle())
         .onHover { hovered = $0 }
     }
 }

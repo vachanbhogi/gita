@@ -51,7 +51,7 @@ struct NavControls: View {
                         .fill(hovering && enabled ? Color.primary.opacity(0.08) : Color.clear)
                 )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressableButtonStyle())
         .disabled(!enabled)
     }
 }
