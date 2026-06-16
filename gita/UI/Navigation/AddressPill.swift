@@ -3,6 +3,7 @@ import SwiftUI
 @MainActor
 struct AddressPill: View {
     var tab: Tab
+    var engine: BrowserEngine
     @State private var editText: String = ""
     @FocusState private var focused: Bool
     @State private var hovering = false
@@ -89,7 +90,7 @@ struct AddressPill: View {
             if !focused { editText = newURL }
         }
         .onAppear { editText = tab.url }
-        .onChange(of: BrowserEngine.shared.isAddressBarFocused) { _, newValue in
+        .onChange(of: engine.isAddressBarFocused) { _, newValue in
             if newValue {
                 editText = tab.url
                 focused = true
@@ -97,7 +98,7 @@ struct AddressPill: View {
         }
         .onChange(of: focused) { _, newValue in
             if !newValue {
-                BrowserEngine.shared.isAddressBarFocused = false
+                engine.isAddressBarFocused = false
             }
         }
     }

@@ -30,6 +30,8 @@ class BrowserEngine {
     private var inactivityTimer: Timer?
     private var memoryPressureSource: DispatchSourceMemoryPressure?
 
+    private static let fallbackUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15"
+
     init() {
         // Initialize with a default tab
         let defaultTab = createNewTab(with: "https://duckduckgo.com")
@@ -56,8 +58,9 @@ class BrowserEngine {
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.setValue(true, forKey: "drawsBackground")
         
-        let fallbackUA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15"
-        webView.customUserAgent = fallbackUA
+        // Set a Safari-matching UA immediately so page requests get the right UA.
+        // upgradeToNativeUserAgent replaces this with the real native UA once it loads.
+        webView.customUserAgent = Self.fallbackUserAgent
         
         let tab = Tab(
             id: UUID(),
@@ -179,8 +182,7 @@ class BrowserEngine {
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.setValue(true, forKey: "drawsBackground")
         
-        let fallbackUA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15"
-        webView.customUserAgent = fallbackUA
+        webView.customUserAgent = Self.fallbackUserAgent
         
         let savedState = tabs[index].interactionState
         let savedURL = tabs[index].url
@@ -213,8 +215,9 @@ class BrowserEngine {
     }
 
     private func enforceLRULimit() {
+        // Keep at most 4 tabs loaded (1 active + 3 background), suspend the oldest
         let activeTabs = tabs.filter { $0.webView != nil && $0.id != activeTabId }
-        guard activeTabs.count > 3 else { return } // Max 4 active (1 active, 3 background)
+        guard activeTabs.count > 3 else { return }
         
         if let oldest = activeTabs.min(by: { $0.lastActiveTime < $1.lastActiveTime }),
            let index = tabs.firstIndex(where: { $0.id == oldest.id }) {
@@ -222,6 +225,7 @@ class BrowserEngine {
         }
     }
 
+    // Suspend background tabs idle for 10+ minutes to reclaim resources
     private func startInactivityTimer() {
         inactivityTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in

@@ -5,16 +5,13 @@ struct ContentView: View {
 
     var body: some View {
         ZStack(alignment: .top) {
-            // True liquid glass: transparent window blends with desktop
             TransparentWindow()
 
-            // Main base layer: Single full-window material blur
             Color.clear
                 .background(.ultraThinMaterial)
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Unified Safari-style chrome bar inside the title bar space
                 ChromeBar(engine: engine)
 
                 HStack(spacing: 0) {
@@ -39,8 +36,7 @@ struct ContentView: View {
             if let webView = activeTab.webView {
                 BrowserView(webView: webView)
                     .id(activeTab.id)
-                    // Solid canvas background under webpage (Safari separate sheet style)
-                    .background(Color(NSColor.windowBackgroundColor))
+                .background(Color(NSColor.windowBackgroundColor))
             } else {
                 ZStack {
                     Color(NSColor.windowBackgroundColor)

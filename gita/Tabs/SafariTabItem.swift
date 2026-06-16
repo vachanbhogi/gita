@@ -13,17 +13,10 @@ struct SafariTabItem: View {
 
     @State private var hovered = false
 
-    private var isSuspended: Bool {
-        if case .suspended = tab.state { return true }
-        return false
-    }
-
     var body: some View {
         Button(action: onSelect) {
             HStack(spacing: 0) {
-                // Tab content
                 HStack(spacing: 6) {
-                    // Left icon / close button area
                     ZStack {
                         if hovered {
                             TabCloseButton(action: onClose)
@@ -33,7 +26,7 @@ struct SafariTabItem: View {
                                 ProgressView()
                                     .scaleEffect(0.32)
                                     .frame(width: 12, height: 12)
-                            } else if isSuspended {
+                            } else if tab.isSuspended {
                                 Image(systemName: "moon.fill")
                                     .font(.system(size: 8))
                                     .foregroundStyle(.quaternary)
@@ -66,24 +59,23 @@ struct SafariTabItem: View {
 
                     Text(tab.title.isEmpty ? "New Tab" : tab.title)
                         .font(.system(size: 12, weight: isActive ? .bold : .medium))
-                        .foregroundStyle(
+                            .foregroundStyle(
                             isActive
                                 ? Color.primary.opacity(0.9)
-                                : Color.primary.opacity(isSuspended ? 0.38 : 0.65)
+                                : Color.primary.opacity(tab.isSuspended ? 0.38 : 0.65)
                         )
-                        .italic(isSuspended)
+                        .italic(tab.isSuspended)
                         .lineLimit(1)
                         .truncationMode(.tail)
                     
                     Spacer(minLength: 0)
                 }
                 .padding(.horizontal, 10)
-                .frame(width: width - 0.5) // Adjust for separator size
+                .frame(width: width - 0.5)
                 .frame(height: 30)
                 .background(tabBackground)
                 .padding(.vertical, 2)
-                
-                // Vertical separator between inactive tabs
+
                 if !isActive && !isLast && !isNextActive {
                     Rectangle()
                         .fill(Color.primary.opacity(0.1))

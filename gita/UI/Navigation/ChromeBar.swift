@@ -23,15 +23,13 @@ struct ChromeBar: View {
         .background(
             VisualEffectView(material: .headerView, blendingMode: .behindWindow)
         )
-        .overlay(alignment: .bottom) {
-            // Hairline separator between chrome and web content
+                .overlay(alignment: .bottom) {
             Rectangle()
                 .fill(Color.primary.opacity(0.08))
                 .frame(height: 0.5)
         }
     }
 
-    // ── Row 1: Toolbar ──────────────────────────────────────────────────────
     private var toolbarRow: some View {
         HStack(spacing: 6) {
             // Traffic-light clearance zone
@@ -60,7 +58,7 @@ struct ChromeBar: View {
 
             // ── Address bar (flex, centered) ────────────────────────────────
             if let tab = engine.activeTab {
-                AddressPill(tab: tab)
+                AddressPill(tab: tab, engine: engine)
             } else {
                 addressPlaceholder
             }
@@ -90,11 +88,11 @@ struct ChromeBar: View {
         .frame(height: 38)
     }
 
-    // ── Row 2: Tab strip ────────────────────────────────────────────────────
     private var tabStrip: some View {
         ScrollView(.horizontal) {
             HStack(spacing: 0) {
                 ForEach(Array(engine.tabs.enumerated()), id: \.element.id) { idx, tab in
+                    // Skip separator when next tab is active (Safari-style seamless active tab)
                     let isNextActive = idx + 1 < engine.tabs.count && engine.tabs[idx + 1].id == engine.activeTabId
                     let count = CGFloat(max(1, engine.tabs.count))
                     let remainingWidth = tabContainerWidth - 32
@@ -142,15 +140,13 @@ struct ChromeBar: View {
                     }
             }
         }
-        .overlay(alignment: .top) {
-            // Subtle hairline between toolbar and tabs
+                .overlay(alignment: .top) {
             Rectangle()
                 .fill(Color.primary.opacity(0.04))
                 .frame(height: 0.5)
         }
     }
 
-    // ── Placeholder address (no active tab) ─────────────────────────────────
     private var addressPlaceholder: some View {
         RoundedRectangle(cornerRadius: 7)
             .fill(Color.primary.opacity(0.05))
