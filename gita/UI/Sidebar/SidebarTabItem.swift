@@ -21,27 +21,7 @@ struct SidebarTabItem: View {
               .scaleEffect(0.32)
               .frame(width: 12, height: 12)
           } else {
-            if let faviconURL = tab.faviconURL {
-              AsyncImage(url: faviconURL) { phase in
-                switch phase {
-                case .success(let image):
-                  image
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 12, height: 12)
-                    .clipShape(.rect(cornerRadius: 2))
-                default:
-                  Image(systemName: "globe")
-                    .font(.system(size: 9.5))
-                    .foregroundStyle(.tertiary)
-                }
-              }
-              .frame(width: 12, height: 12)
-            } else {
-              Image(systemName: "globe")
-                .font(.system(size: 9.5))
-                .foregroundStyle(.tertiary)
-            }
+            FaviconView(url: tab.faviconURL, size: 12, iconSize: 9.5)
           }
         }
         .frame(width: 14, height: 14)

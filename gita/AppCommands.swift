@@ -2,18 +2,19 @@ import SwiftUI
 
 struct AppCommands: Commands {
   let engine: BrowserEngine
+  let uiState: UIState
 
   var body: some Commands {
     CommandGroup(replacing: .newItem) {
-      Button("New Tab") { engine.addNewTab() }
+      Button("New Tab") { engine.addNewTab(uiState: uiState) }
         .keyboardShortcut("t", modifiers: .command)
 
-      Button("Close Tab") { engine.closeTab(id: engine.activeTabId) }
+      Button("Close Tab") { engine.closeTab(id: engine.activeTabId, uiState: uiState) }
         .keyboardShortcut("w", modifiers: .command)
     }
 
     CommandGroup(after: .sidebar) {
-      Button("Open Location…") { engine.isAddressBarFocused = true }
+      Button("Open Location…") { uiState.isAddressBarFocused = true }
         .keyboardShortcut("l", modifiers: .command)
     }
 
@@ -54,16 +55,16 @@ struct AppCommands: Commands {
 
   @ViewBuilder
   private var sidebarGroup: some View {
-    Button("Focus Sidebar") { engine.toggleSidebarFocus() }
+    Button("Focus Sidebar") { engine.toggleSidebarFocus(uiState: uiState) }
       .keyboardShortcut("s", modifiers: [.command, .option])
 
     Button("Toggle Sidebar") {
       withAnimation(.spring(response: 0.3, dampingFraction: 0.82)) {
-        if !engine.isVerticalTabs {
-          engine.isVerticalTabs = true
-          engine.sidebarVisible = true
+        if !uiState.isVerticalTabs {
+          uiState.isVerticalTabs = true
+          uiState.sidebarVisible = true
         } else {
-          engine.sidebarVisible.toggle()
+          uiState.sidebarVisible.toggle()
         }
       }
     }

@@ -10,17 +10,13 @@ class BrowserEngine {
   var activeTabId: UUID = UUID()
   var activeTab: Tab? = nil
 
-  var isAddressBarFocused: Bool = false
-  var isVerticalTabs: Bool = false
-  var sidebarVisible: Bool = true
-  var isSidebarFocused: Bool = false
-  var sidebarFocusedIndex: Int = 0
-
+  private let processPool = WKProcessPool()
   private var inactivityTimer: Timer?
   private var memoryPressureSource: DispatchSourceMemoryPressure?
 
   private static let fallbackUserAgent =
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15"
+  private static var cachedUserAgent: String?
 
   init() {
     // Initialize with a default tab
@@ -38,6 +34,7 @@ class BrowserEngine {
 
   func createNewTab(with urlString: String = "https://duckduckgo.com") -> Tab {
     let config = WKWebViewConfiguration()
+    config.processPool = processPool
     let webView = WKWebView(frame: .zero, configuration: config)
     webView.setValue(true, forKey: "drawsBackground")
 
@@ -60,12 +57,12 @@ class BrowserEngine {
     return tab
   }
 
-  func addNewTab(urlString: String = "https://duckduckgo.com") {
+  func addNewTab(urlString: String = "https://duckduckgo.com", uiState: UIState) {
     let tab = createNewTab(with: urlString)
     withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
       tabs.append(tab)
       selectTab(id: tab.id)
-      sidebarFocusedIndex = tabs.count - 1
+      uiState.sidebarFocusedIndex = tabs.count - 1
     }
   }
 
@@ -74,7 +71,6 @@ class BrowserEngine {
     activeTabId = id
     activeTab = tabs[index]
     tabs[index].lastActiveTime = Date()
-    sidebarFocusedIndex = index
 
     if tabs[index].webView == nil {
       restoreTab(at: index)
@@ -83,25 +79,27 @@ class BrowserEngine {
     enforceLRULimit()
   }
 
-  func closeTab(id: UUID) {
+  func closeTab(id: UUID, uiState: UIState) {
     guard let index = tabs.firstIndex(where: { $0.id == id }) else { return }
+    let closedTab = tabs[index]
+    closedTab.webView?.stopLoading()
+    closedTab.webView?.navigationDelegate = nil
+
     withAnimation(.spring(response: 0.32, dampingFraction: 0.82)) {
-      let closedTab = tabs.remove(at: index)
-      closedTab.webView?.stopLoading()
-      closedTab.webView?.navigationDelegate = nil
+      tabs.remove(at: index)
+    }
 
-      if activeTabId == id {
-        if !tabs.isEmpty {
-          let newIndex = min(index, tabs.count - 1)
-          selectTab(id: tabs[newIndex].id)
-        } else {
-          addNewTab()
-        }
+    if activeTabId == id {
+      if !tabs.isEmpty {
+        let newIndex = min(index, tabs.count - 1)
+        selectTab(id: tabs[newIndex].id)
+      } else {
+        addNewTab(uiState: uiState)
       }
+    }
 
-      if sidebarFocusedIndex >= tabs.count {
-        sidebarFocusedIndex = max(0, tabs.count - 1)
-      }
+    if uiState.sidebarFocusedIndex >= tabs.count {
+      uiState.sidebarFocusedIndex = max(0, tabs.count - 1)
     }
   }
 
@@ -131,37 +129,38 @@ class BrowserEngine {
     selectTab(id: tabs[tabs.count - 1].id)
   }
 
-  func toggleSidebarFocus() {
-    if isSidebarFocused {
-      isSidebarFocused = false
+  func toggleSidebarFocus(uiState: UIState) {
+    if uiState.isSidebarFocused {
+      uiState.isSidebarFocused = false
     } else {
-      focusSidebar()
+      focusSidebar(uiState: uiState)
     }
   }
 
-  func focusSidebar() {
-    if !isVerticalTabs {
+  func focusSidebar(uiState: UIState) {
+    if !uiState.isVerticalTabs {
       withAnimation(.spring(response: 0.3, dampingFraction: 0.82)) {
-        isVerticalTabs = true
-        sidebarVisible = true
+        uiState.isVerticalTabs = true
+        uiState.sidebarVisible = true
       }
-    } else if !sidebarVisible {
+    } else if !uiState.sidebarVisible {
       withAnimation(.spring(response: 0.3, dampingFraction: 0.82)) {
-        sidebarVisible = true
+        uiState.sidebarVisible = true
       }
     }
 
     if let activeIndex = tabs.firstIndex(where: { $0.id == activeTabId }) {
-      sidebarFocusedIndex = activeIndex
+      uiState.sidebarFocusedIndex = activeIndex
     } else {
-      sidebarFocusedIndex = 0
+      uiState.sidebarFocusedIndex = 0
     }
 
-    isSidebarFocused = true
+    uiState.isSidebarFocused = true
   }
 
   private func restoreTab(at index: Int) {
     let config = WKWebViewConfiguration()
+    config.processPool = processPool
     let webView = WKWebView(frame: .zero, configuration: config)
     webView.setValue(true, forKey: "drawsBackground")
 
@@ -252,6 +251,11 @@ class BrowserEngine {
   }
 
   private func upgradeToNativeUserAgent(for webView: WKWebView) {
+    if let cached = Self.cachedUserAgent {
+      webView.customUserAgent = cached
+      return
+    }
+
     webView.evaluateJavaScript("navigator.userAgent") { [weak self] result, error in
       guard let self = self, let nativeUA = result as? String else { return }
 
@@ -266,9 +270,9 @@ class BrowserEngine {
         productionUA += " Version/18.0 Safari/\(webKitVersion)"
       }
 
+      Self.cachedUserAgent = productionUA
       Task { @MainActor in
         webView.customUserAgent = productionUA
-        print("Strategy A Active. Production UA: \(productionUA)")
       }
     }
   }

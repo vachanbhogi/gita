@@ -3,6 +3,7 @@ import SwiftUI
 @MainActor
 struct SidebarView: View {
   var engine: BrowserEngine
+  var uiState: UIState
   @State private var hoveringNewTab = false
   @FocusState private var isFocused: Bool
 
@@ -11,9 +12,9 @@ struct SidebarView: View {
     HStack(spacing: 4) {
       Text("TABS")
         .font(.system(size: 9.5, weight: .bold))
-        .foregroundStyle(engine.isSidebarFocused ? Color.accentColor : .secondary.opacity(0.8))
+        .foregroundStyle(uiState.isSidebarFocused ? Color.accentColor : .secondary.opacity(0.8))
 
-      if engine.isSidebarFocused {
+      if uiState.isSidebarFocused {
         Image(systemName: "keyboard")
           .font(.system(size: 9))
           .foregroundStyle(Color.accentColor)
@@ -28,7 +29,7 @@ struct SidebarView: View {
   }
 
   private var newTabButton: some View {
-    Button(action: { engine.addNewTab() }) {
+    Button(action: { engine.addNewTab(uiState: uiState) }) {
       HStack {
         Image(systemName: "plus")
           .font(.system(size: 11, weight: .bold))
@@ -59,7 +60,7 @@ struct SidebarView: View {
 
         Button(action: {
           withAnimation(.spring(response: 0.3, dampingFraction: 0.82)) {
-            engine.isVerticalTabs = false
+            uiState.isVerticalTabs = false
           }
         }) {
           HStack(spacing: 6) {
@@ -93,20 +94,19 @@ struct SidebarView: View {
       ScrollViewReader { proxy in
         ScrollView {
           VStack(spacing: 2) {
-            ForEach(engine.tabs) { tab in
-              let idx = engine.tabs.firstIndex(where: { $0.id == tab.id }) ?? 0
+            ForEach(Array(engine.tabs.enumerated()), id: \.element.id) { idx, tab in
               SidebarTabItem(
                 tab: tab,
                 index: idx,
                 isActive: tab.id == engine.activeTabId,
-                isHighlighted: idx == engine.sidebarFocusedIndex,
-                isSidebarFocused: engine.isSidebarFocused,
+                isHighlighted: idx == uiState.sidebarFocusedIndex,
+                isSidebarFocused: uiState.isSidebarFocused,
                 onSelect: {
-                  engine.sidebarFocusedIndex = idx
+                  uiState.sidebarFocusedIndex = idx
                   engine.selectTab(id: tab.id)
-                  engine.isSidebarFocused = true
+                  uiState.isSidebarFocused = true
                 },
-                onClose: { engine.closeTab(id: tab.id) }
+                onClose: { engine.closeTab(id: tab.id, uiState: uiState) }
               )
               .id(tab.id)
               .transition(
@@ -117,7 +117,7 @@ struct SidebarView: View {
           .padding(.horizontal, 8)
         }
         .scrollIndicators(.hidden)
-        .onChange(of: engine.sidebarFocusedIndex) { _, newIndex in
+        .onChange(of: uiState.sidebarFocusedIndex) { _, newIndex in
           scrollToTab(at: newIndex, proxy: proxy)
         }
       }
@@ -139,18 +139,18 @@ struct SidebarView: View {
     .focusable()
     .focused($isFocused)
     .onTapGesture {
-      engine.isSidebarFocused = true
+      uiState.isSidebarFocused = true
     }
     .onKeyPress { keyPress in
       handleKeyPress(keyPress)
     }
-    .onChange(of: engine.isSidebarFocused) { _, newValue in
+    .onChange(of: uiState.isSidebarFocused) { _, newValue in
       withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
         isFocused = newValue
       }
     }
     .onChange(of: isFocused) { _, newValue in
-      engine.isSidebarFocused = newValue
+      uiState.isSidebarFocused = newValue
     }
   }
 
@@ -168,22 +168,22 @@ struct SidebarView: View {
     switch keyPress.key {
     case .downArrow:
       if !engine.tabs.isEmpty {
-        engine.sidebarFocusedIndex = (engine.sidebarFocusedIndex + 1) % engine.tabs.count
+        uiState.sidebarFocusedIndex = (uiState.sidebarFocusedIndex + 1) % engine.tabs.count
       }
       return .handled
     case .upArrow:
       if !engine.tabs.isEmpty {
-        engine.sidebarFocusedIndex =
-          (engine.sidebarFocusedIndex - 1 + engine.tabs.count) % engine.tabs.count
+        uiState.sidebarFocusedIndex =
+          (uiState.sidebarFocusedIndex - 1 + engine.tabs.count) % engine.tabs.count
       }
       return .handled
     case .return, .space:
-      if engine.sidebarFocusedIndex >= 0 && engine.sidebarFocusedIndex < engine.tabs.count {
-        engine.selectTab(id: engine.tabs[engine.sidebarFocusedIndex].id)
+      if uiState.sidebarFocusedIndex >= 0 && uiState.sidebarFocusedIndex < engine.tabs.count {
+        engine.selectTab(id: engine.tabs[uiState.sidebarFocusedIndex].id)
       }
       return .handled
     case .escape:
-      engine.isSidebarFocused = false
+      uiState.isSidebarFocused = false
       return .handled
     case .delete:
       closeFocusedTab()
@@ -193,8 +193,7 @@ struct SidebarView: View {
         closeFocusedTab()
         return .handled
       } else if keyPress.characters == "n" {
-        engine.addNewTab()
-        engine.sidebarFocusedIndex = engine.tabs.count - 1
+        engine.addNewTab(uiState: uiState)
         return .handled
       } else if keyPress.characters == "\u{7F}" || keyPress.characters == "\u{08}" {
         closeFocusedTab()
@@ -205,12 +204,9 @@ struct SidebarView: View {
   }
 
   private func closeFocusedTab() {
-    if engine.sidebarFocusedIndex >= 0 && engine.sidebarFocusedIndex < engine.tabs.count {
-      let tabId = engine.tabs[engine.sidebarFocusedIndex].id
-      engine.closeTab(id: tabId)
-      if engine.sidebarFocusedIndex >= engine.tabs.count {
-        engine.sidebarFocusedIndex = max(0, engine.tabs.count - 1)
-      }
+    if uiState.sidebarFocusedIndex >= 0 && uiState.sidebarFocusedIndex < engine.tabs.count {
+      let tabId = engine.tabs[uiState.sidebarFocusedIndex].id
+      engine.closeTab(id: tabId, uiState: uiState)
     }
   }
 }

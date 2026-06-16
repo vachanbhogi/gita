@@ -8,6 +8,7 @@ import SwiftUI
 @MainActor
 struct ChromeBar: View {
   var engine: BrowserEngine
+  var uiState: UIState
   @State private var tabContainerWidth: CGFloat = 800
   @State private var hoveringNewTab = false
 
@@ -15,7 +16,7 @@ struct ChromeBar: View {
     VStack(spacing: 0) {
       toolbarRow
 
-      if !engine.isVerticalTabs {
+      if !uiState.isVerticalTabs {
         tabStrip
           .background(Color.primary.opacity(0.03))
       }
@@ -38,11 +39,11 @@ struct ChromeBar: View {
       // Sidebar toggle
       ChromeButton(icon: "sidebar.leading", size: 13) {
         withAnimation(.spring(response: 0.28, dampingFraction: 0.82)) {
-          if !engine.isVerticalTabs {
-            engine.isVerticalTabs = true
-            engine.sidebarVisible = true
+          if !uiState.isVerticalTabs {
+            uiState.isVerticalTabs = true
+            uiState.sidebarVisible = true
           } else {
-            engine.sidebarVisible.toggle()
+            uiState.sidebarVisible.toggle()
           }
         }
       }
@@ -58,7 +59,7 @@ struct ChromeBar: View {
 
       // ── Address bar (flex, centered) ────────────────────────────────
       if let tab = engine.activeTab {
-        AddressPill(tab: tab, engine: engine)
+        AddressPill(tab: tab, uiState: uiState)
       } else {
         addressPlaceholder
       }
@@ -71,17 +72,17 @@ struct ChromeBar: View {
 
       // Layout switcher
       ChromeButton(
-        icon: engine.isVerticalTabs ? "rectangle.split.1x2" : "rectangle.split.2x1",
+        icon: uiState.isVerticalTabs ? "rectangle.split.1x2" : "rectangle.split.2x1",
         size: 13
       ) {
         withAnimation(.spring(response: 0.3, dampingFraction: 0.82)) {
-          engine.isVerticalTabs.toggle()
+          uiState.isVerticalTabs.toggle()
         }
       }
 
       // New tab — rightmost
       ChromeButton(icon: "plus", size: 13) {
-        engine.addNewTab()
+        engine.addNewTab(uiState: uiState)
       }
       .padding(.trailing, 10)
     }
@@ -106,14 +107,17 @@ struct ChromeBar: View {
             isLast: idx == engine.tabs.count - 1,
             isNextActive: isNextActive,
             width: tabWidth,
-            onSelect: { engine.selectTab(id: tab.id) },
-            onClose: { engine.closeTab(id: tab.id) }
+            onSelect: {
+              engine.selectTab(id: tab.id)
+              uiState.sidebarFocusedIndex = idx
+            },
+            onClose: { engine.closeTab(id: tab.id, uiState: uiState) }
           )
           .transition(
             .asymmetric(insertion: .scale(scale: 0.96).combined(with: .opacity), removal: .opacity))
         }
 
-        Button(action: { engine.addNewTab() }) {
+        Button(action: { engine.addNewTab(uiState: uiState) }) {
           Image(systemName: "plus")
             .font(.system(size: 11, weight: .bold))
             .foregroundStyle(Color.primary.opacity(hoveringNewTab ? 0.85 : 0.55))
