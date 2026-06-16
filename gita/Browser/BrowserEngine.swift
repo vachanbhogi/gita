@@ -16,6 +16,7 @@ class BrowserEngine {
 
   private static let fallbackUserAgent =
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15"
+  private static var cachedUserAgent: String?
 
   init() {
     // Initialize with a default tab
@@ -248,6 +249,11 @@ class BrowserEngine {
   }
 
   private func upgradeToNativeUserAgent(for webView: WKWebView) {
+    if let cached = Self.cachedUserAgent {
+      webView.customUserAgent = cached
+      return
+    }
+
     webView.evaluateJavaScript("navigator.userAgent") { [weak self] result, error in
       guard let self = self, let nativeUA = result as? String else { return }
 
@@ -262,9 +268,9 @@ class BrowserEngine {
         productionUA += " Version/18.0 Safari/\(webKitVersion)"
       }
 
+      Self.cachedUserAgent = productionUA
       Task { @MainActor in
         webView.customUserAgent = productionUA
-        print("Strategy A Active. Production UA: \(productionUA)")
       }
     }
   }
