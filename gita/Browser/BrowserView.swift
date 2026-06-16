@@ -11,8 +11,8 @@ struct BrowserView: NSViewRepresentable {
   }
 
   func updateNSView(_ nsView: NSView, context: Context) {
-    guard nsView.subviews.first !== webView else { return }
-    nsView.subviews.forEach { $0.removeFromSuperview() }
+    guard webView.superview !== nsView else { return }
+    nsView.subviews.first?.removeFromSuperview()
     addWebView(webView, to: nsView)
   }
 
