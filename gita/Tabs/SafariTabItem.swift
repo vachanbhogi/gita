@@ -31,27 +31,7 @@ struct SafariTabItem: View {
                   .font(.system(size: 8))
                   .foregroundStyle(.quaternary)
               } else {
-                if let faviconURL = tab.faviconURL {
-                  AsyncImage(url: faviconURL) { phase in
-                    switch phase {
-                    case .success(let image):
-                      image
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 13, height: 13)
-                        .clipShape(.rect(cornerRadius: 2))
-                    default:
-                      Image(systemName: "globe")
-                        .font(.system(size: 10))
-                        .foregroundStyle(.tertiary)
-                    }
-                  }
-                  .frame(width: 13, height: 13)
-                } else {
-                  Image(systemName: "globe")
-                    .font(.system(size: 10))
-                    .foregroundStyle(.tertiary)
-                }
+                FaviconView(url: tab.faviconURL, size: 13, iconSize: 10)
               }
             }
           }
