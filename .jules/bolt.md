@@ -1,0 +1,3 @@
+## 2023-10-27 - Safely Refactoring MainActor to Actor in Swift UI Contexts
+**Learning:** When moving a `@MainActor` caching class to a Swift `actor` to offload work (e.g., image decoding) from the main thread, you must ensure you do not break synchronous API contracts. Swift's `NSCache` is natively thread-safe.
+**Action:** When migrating `NSCache` wrappers from `@MainActor class` to `actor`, apply the `nonisolated` keyword to the cache access methods (`image(for:)`, `setImage(...)`) to preserve synchronous, flicker-free UI rendering while safely reaping the performance benefits of actor isolation for asynchronous fetching operations.
