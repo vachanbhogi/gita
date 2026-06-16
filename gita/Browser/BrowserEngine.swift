@@ -21,6 +21,8 @@ class BrowserEngine {
     var isAddressBarFocused: Bool = false
     var isVerticalTabs: Bool = false
     var sidebarVisible: Bool = true
+    var isSidebarFocused: Bool = false
+    var sidebarFocusedIndex: Int = 0
 
     private let monitor = NWPathMonitor()
     private let monitorQueue = DispatchQueue(label: "connectivity")
@@ -77,6 +79,7 @@ class BrowserEngine {
         withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
             tabs.append(tab)
             selectTab(id: tab.id)
+            sidebarFocusedIndex = tabs.count - 1
         }
     }
 
@@ -85,6 +88,7 @@ class BrowserEngine {
         activeTabId = id
         activeTab = tabs[index]
         tabs[index].lastActiveTime = Date()
+        sidebarFocusedIndex = index
         
         if tabs[index].webView == nil {
             restoreTab(at: index)
@@ -108,7 +112,66 @@ class BrowserEngine {
                     addNewTab()
                 }
             }
+            
+            if sidebarFocusedIndex >= tabs.count {
+                sidebarFocusedIndex = max(0, tabs.count - 1)
+            }
         }
+    }
+
+    func selectNextTab() {
+        guard !tabs.isEmpty else { return }
+        if let currentIndex = tabs.firstIndex(where: { $0.id == activeTabId }) {
+            let nextIndex = (currentIndex + 1) % tabs.count
+            selectTab(id: tabs[nextIndex].id)
+        }
+    }
+
+    func selectPreviousTab() {
+        guard !tabs.isEmpty else { return }
+        if let currentIndex = tabs.firstIndex(where: { $0.id == activeTabId }) {
+            let prevIndex = (currentIndex - 1 + tabs.count) % tabs.count
+            selectTab(id: tabs[prevIndex].id)
+        }
+    }
+
+    func selectTab(at index: Int) {
+        guard index >= 0 && index < tabs.count else { return }
+        selectTab(id: tabs[index].id)
+    }
+
+    func selectLastTab() {
+        guard !tabs.isEmpty else { return }
+        selectTab(id: tabs[tabs.count - 1].id)
+    }
+
+    func toggleSidebarFocus() {
+        if isSidebarFocused {
+            isSidebarFocused = false
+        } else {
+            focusSidebar()
+        }
+    }
+
+    func focusSidebar() {
+        if !isVerticalTabs {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.82)) {
+                isVerticalTabs = true
+                sidebarVisible = true
+            }
+        } else if !sidebarVisible {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.82)) {
+                sidebarVisible = true
+            }
+        }
+        
+        if let activeIndex = tabs.firstIndex(where: { $0.id == activeTabId }) {
+            sidebarFocusedIndex = activeIndex
+        } else {
+            sidebarFocusedIndex = 0
+        }
+        
+        isSidebarFocused = true
     }
 
     private func restoreTab(at index: Int) {
