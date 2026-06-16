@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ContentView: View {
-  @State private var engine = BrowserEngine.shared
+  let engine: BrowserEngine
 
   var body: some View {
     ZStack(alignment: .top) {

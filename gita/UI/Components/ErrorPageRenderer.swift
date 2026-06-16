@@ -4,6 +4,10 @@ import WebKit
 // Separated from Tab to keep model/delegate logic free of presentation concerns.
 enum ErrorPageRenderer {
   static func show(title: String, message: String, url: String, on webView: WKWebView) {
+    let escapedTitle = htmlEscape(title)
+    let escapedMessage = htmlEscape(message)
+    let escapedURL = htmlEscape(url)
+
     let html = """
       <!DOCTYPE html>
       <html>
@@ -90,14 +94,24 @@ enum ErrorPageRenderer {
       </head>
       <body>
       <div class="container">
-          <h1>\(title)</h1>
-          <p>\(message)</p>
-          <div class="url-text">\(url)</div>
+          <h1>\(escapedTitle)</h1>
+          <p>\(escapedMessage)</p>
+          <div class="url-text">\(escapedURL)</div>
           <a class="button" href="javascript:window.location.reload()">Reload Page</a>
       </div>
       </body>
       </html>
       """
     webView.loadHTMLString(html, baseURL: nil)
+  }
+
+  private static func htmlEscape(_ s: String) -> String {
+    var result = s
+    result = result.replacingOccurrences(of: "&", with: "&amp;")
+    result = result.replacingOccurrences(of: "<", with: "&lt;")
+    result = result.replacingOccurrences(of: ">", with: "&gt;")
+    result = result.replacingOccurrences(of: "\"", with: "&quot;")
+    result = result.replacingOccurrences(of: "'", with: "&#39;")
+    return result
   }
 }

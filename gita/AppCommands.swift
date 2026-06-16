@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct AppCommands: Commands {
-  private var engine: BrowserEngine { BrowserEngine.shared }
+  let engine: BrowserEngine
 
   var body: some Commands {
     CommandGroup(replacing: .newItem) {

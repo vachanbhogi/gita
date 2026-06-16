@@ -1,5 +1,4 @@
 import Foundation
-import Network
 import Observation
 import SwiftUI
 import WebKit
@@ -7,25 +6,15 @@ import WebKit
 @Observable
 @MainActor
 class BrowserEngine {
-  static let shared: BrowserEngine = {
-    let engine = BrowserEngine()
-    engine.setup()
-    return engine
-  }()
-
   var tabs: [Tab] = []
   var activeTabId: UUID = UUID()
   var activeTab: Tab? = nil
 
-  var isOnline: Bool = true
   var isAddressBarFocused: Bool = false
   var isVerticalTabs: Bool = false
   var sidebarVisible: Bool = true
   var isSidebarFocused: Bool = false
   var sidebarFocusedIndex: Int = 0
-
-  private let monitor = NWPathMonitor()
-  private let monitorQueue = DispatchQueue(label: "connectivity")
 
   private var inactivityTimer: Timer?
   private var memoryPressureSource: DispatchSourceMemoryPressure?
@@ -39,17 +28,10 @@ class BrowserEngine {
     self.tabs = [defaultTab]
     self.activeTabId = defaultTab.id
     self.activeTab = defaultTab
+    setup()
   }
 
   private func setup() {
-    monitor.pathUpdateHandler = { [weak self] path in
-      Task { @MainActor [weak self] in
-        guard let self = self else { return }
-        self.isOnline = path.status == .satisfied
-      }
-    }
-    monitor.start(queue: monitorQueue)
-
     startInactivityTimer()
     setupMemoryPressureListener()
   }
