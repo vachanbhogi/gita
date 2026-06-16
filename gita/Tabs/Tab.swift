@@ -85,7 +85,6 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
           } else {
             self.faviconURL = nil
           }
-          self.updateMetadata(for: webView)
         }
       },
       webView.observe(\.isLoading) { [weak self] webView, _ in
@@ -109,7 +108,8 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
       webView.observe(\.title) { [weak self] webView, _ in
         Task { @MainActor [weak self] in
           guard let self = self else { return }
-          self.updateMetadata(for: webView)
+          let title = webView.title ?? ""
+          self.title = title.isEmpty ? "New Tab" : title
         }
       },
       webView.observe(\.hasOnlySecureContent) { [weak self] webView, _ in
