@@ -40,7 +40,8 @@ struct NavControls: View {
 
   @ViewBuilder
   private func navBtn(
-    icon: String, enabled: Bool, hovering: Bool, tooltip: String, action: @MainActor @escaping () -> Void
+    icon: String, enabled: Bool, hovering: Bool, tooltip: String,
+    action: @MainActor @escaping () -> Void
   ) -> some View {
     Button(action: action) {
       Image(systemName: icon)
