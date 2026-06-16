@@ -1,14 +1,23 @@
 import Foundation
 import WebKit
-import Combine
 import Network
+import Observation
 
-class BrowserEngine: ObservableObject {
-    @Published var tabs: [Tab] = []
-    @Published var activeTabId: UUID = UUID()
-    @Published var activeTab: Tab? = nil
+@Observable
+@MainActor
+class BrowserEngine {
+    static let shared: BrowserEngine = {
+        let engine = BrowserEngine()
+        engine.setup()
+        return engine
+    }()
     
-    @Published var isOnline: Bool = true
+    var tabs: [Tab] = []
+    var activeTabId: UUID = UUID()
+    var activeTab: Tab? = nil
+    
+    var isOnline: Bool = true
+    var isAddressBarFocused: Bool = false
 
     private let monitor = NWPathMonitor()
     private let monitorQueue = DispatchQueue(label: "connectivity")
@@ -17,31 +26,30 @@ class BrowserEngine: ObservableObject {
     private var memoryPressureSource: DispatchSourceMemoryPressure?
 
     init() {
-        monitor.pathUpdateHandler = { [weak self] path in
-            DispatchQueue.main.async {
-                self?.isOnline = path.status == .satisfied
-            }
-        }
-        monitor.start(queue: monitorQueue)
-
         // Initialize with a default tab
         let defaultTab = createNewTab(with: "https://duckduckgo.com")
         self.tabs = [defaultTab]
         self.activeTabId = defaultTab.id
         self.activeTab = defaultTab
-        
+    }
+    
+    private func setup() {
+        monitor.pathUpdateHandler = { [weak self] path in
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
+                self.isOnline = path.status == .satisfied
+            }
+        }
+        monitor.start(queue: monitorQueue)
+
         startInactivityTimer()
         setupMemoryPressureListener()
     }
     
-    deinit {
-        inactivityTimer?.invalidate()
-        memoryPressureSource?.cancel()
-    }
-
     func createNewTab(with urlString: String = "https://duckduckgo.com") -> Tab {
         let config = WKWebViewConfiguration()
         let webView = WKWebView(frame: .zero, configuration: config)
+        webView.setValue(true, forKey: "drawsBackground")
         
         let fallbackUA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15"
         webView.customUserAgent = fallbackUA
@@ -99,6 +107,7 @@ class BrowserEngine: ObservableObject {
     private func restoreTab(at index: Int) {
         let config = WKWebViewConfiguration()
         let webView = WKWebView(frame: .zero, configuration: config)
+        webView.setValue(true, forKey: "drawsBackground")
         
         let fallbackUA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15"
         webView.customUserAgent = fallbackUA
@@ -145,14 +154,16 @@ class BrowserEngine: ObservableObject {
 
     private func startInactivityTimer() {
         inactivityTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
-            guard let self = self else { return }
-            let now = Date()
-            for i in 0..<self.tabs.count {
-                let tab = self.tabs[i]
-                if tab.id != self.activeTabId && tab.webView != nil {
-                    let idleTime = now.timeIntervalSince(tab.lastActiveTime)
-                    if idleTime > 600 { // 10 minutes
-                        self.suspendTab(at: i)
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
+                let now = Date()
+                for i in 0..<self.tabs.count {
+                    let tab = self.tabs[i]
+                    if tab.id != self.activeTabId && tab.webView != nil {
+                        let idleTime = now.timeIntervalSince(tab.lastActiveTime)
+                        if idleTime > 600 { // 10 minutes
+                            self.suspendTab(at: i)
+                        }
                     }
                 }
             }
@@ -162,9 +173,11 @@ class BrowserEngine: ObservableObject {
     private func setupMemoryPressureListener() {
         let source = DispatchSource.makeMemoryPressureSource(eventMask: [.warning, .critical], queue: DispatchQueue.main)
         source.setEventHandler { [weak self] in
-            guard let self = self else { return }
-            print("Low memory signal. Suspending all background tabs.")
-            self.suspendAllBackgroundTabs()
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
+                print("Low memory signal. Suspending all background tabs.")
+                self.suspendAllBackgroundTabs()
+            }
         }
         source.resume()
         self.memoryPressureSource = source
@@ -193,7 +206,7 @@ class BrowserEngine: ObservableObject {
                 productionUA += " Version/18.0 Safari/\(webKitVersion)"
             }
 
-            DispatchQueue.main.async {
+            Task { @MainActor in
                 webView.customUserAgent = productionUA
                 print("Strategy A Active. Production UA: \(productionUA)")
             }
