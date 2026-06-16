@@ -1,0 +1,4 @@
+## 2024-06-16 - Prevent Unintended Javascript Execution and File Access in WebView
+**Vulnerability:** The browser tab implementation allowed arbitrary navigation to `javascript:` and `file:` schemes, which could be exploited for Cross-Site Scripting (XSS) and Local File Read vulnerabilities via user input or malicious redirects.
+**Learning:** Default WKWebView configurations do not block these schemes automatically. They must be explicitly denied. In addition, blocking a navigation intentionally triggers an `NSURLErrorCancelled` error which needs to be handled to avoid showing ugly error pages.
+**Prevention:** Implement `WKNavigationDelegate.webView(_:decidePolicyFor:decisionHandler:)` to cancel navigations to dangerous schemes. Filter input in the address bar logic. Ignore `NSURLErrorCancelled` when handling navigation errors.

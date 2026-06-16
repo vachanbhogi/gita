@@ -140,6 +140,12 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
     let trimmed = input.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !trimmed.isEmpty else { return }
 
+    // Prevent direct execution of javascript or access to local files from address bar
+    let lowerTrimmed = trimmed.lowercased()
+    if lowerTrimmed.hasPrefix("javascript:") || lowerTrimmed.hasPrefix("file:") {
+      return
+    }
+
     // Heuristic: contains a dot without a space → likely a hostname, not a search query
     let url: URL
     if trimmed.contains("://") || trimmed.contains(".") && !trimmed.contains(" ") {
@@ -175,6 +181,22 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
   }
 
   // MARK: - WKNavigationDelegate
+
+  func webView(
+    _ webView: WKWebView,
+    decidePolicyFor navigationAction: WKNavigationAction,
+    decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
+  ) {
+    if let url = navigationAction.request.url {
+      let scheme = url.scheme?.lowercased()
+      if scheme == "javascript" || scheme == "file" {
+        decisionHandler(.cancel)
+        return
+      }
+    }
+    decisionHandler(.allow)
+  }
+
   func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
     Task { @MainActor [weak self] in
       self?.failedURL = nil
@@ -205,6 +227,12 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
 
   private func handleNavigationError(_ error: Error, for webView: WKWebView) {
     let nsError = error as NSError
+
+    // Ignore cancelled errors (e.g. from our decidePolicyFor blocking)
+    if nsError.domain == NSURLErrorDomain && nsError.code == NSURLErrorCancelled {
+      return
+    }
+
     let url =
       (nsError.userInfo[NSURLErrorFailingURLErrorKey] as? URL)?.absoluteString
       ?? (webView.url?.absoluteString ?? "")
