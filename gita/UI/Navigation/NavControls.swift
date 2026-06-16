@@ -13,6 +13,7 @@ struct NavControls: View {
         icon: "chevron.left",
         enabled: tab.canGoBack,
         hovering: hoverBack,
+        tooltip: "Go back",
         action: { tab.goBack() }
       )
       .onHover { hoverBack = $0 }
@@ -21,6 +22,7 @@ struct NavControls: View {
         icon: "chevron.right",
         enabled: tab.canGoForward,
         hovering: hoverFwd,
+        tooltip: "Go forward",
         action: { tab.goForward() }
       )
       .onHover { hoverFwd = $0 }
@@ -29,6 +31,7 @@ struct NavControls: View {
         icon: tab.isLoading ? "xmark" : "arrow.clockwise",
         enabled: true,
         hovering: hoverReload,
+        tooltip: tab.isLoading ? "Stop loading" : "Reload page",
         action: { tab.reload() }
       )
       .onHover { hoverReload = $0 }
@@ -37,7 +40,7 @@ struct NavControls: View {
 
   @ViewBuilder
   private func navBtn(
-    icon: String, enabled: Bool, hovering: Bool, action: @MainActor @escaping () -> Void
+    icon: String, enabled: Bool, hovering: Bool, tooltip: String, action: @MainActor @escaping () -> Void
   ) -> some View {
     Button(action: action) {
       Image(systemName: icon)
@@ -55,6 +58,7 @@ struct NavControls: View {
     }
     .buttonStyle(PressableButtonStyle())
     .disabled(!enabled)
+    .help(tooltip)
   }
 }
 
