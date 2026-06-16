@@ -10,6 +10,7 @@ class BrowserEngine {
   var activeTabId: UUID = UUID()
   var activeTab: Tab? = nil
 
+  private let processPool = WKProcessPool()
   private var inactivityTimer: Timer?
   private var memoryPressureSource: DispatchSourceMemoryPressure?
 
@@ -32,6 +33,7 @@ class BrowserEngine {
 
   func createNewTab(with urlString: String = "https://duckduckgo.com") -> Tab {
     let config = WKWebViewConfiguration()
+    config.processPool = processPool
     let webView = WKWebView(frame: .zero, configuration: config)
     webView.setValue(true, forKey: "drawsBackground")
 
@@ -155,6 +157,7 @@ class BrowserEngine {
 
   private func restoreTab(at index: Int) {
     let config = WKWebViewConfiguration()
+    config.processPool = processPool
     let webView = WKWebView(frame: .zero, configuration: config)
     webView.setValue(true, forKey: "drawsBackground")
 
