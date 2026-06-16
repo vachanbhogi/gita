@@ -94,8 +94,7 @@ struct SidebarView: View {
       ScrollViewReader { proxy in
         ScrollView {
           VStack(spacing: 2) {
-            ForEach(engine.tabs) { tab in
-              let idx = engine.tabs.firstIndex(where: { $0.id == tab.id }) ?? 0
+            ForEach(Array(engine.tabs.enumerated()), id: \.element.id) { idx, tab in
               SidebarTabItem(
                 tab: tab,
                 index: idx,
