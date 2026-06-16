@@ -35,7 +35,6 @@ struct ContentView: View {
     if let activeTab = engine.activeTab {
       if let webView = activeTab.webView {
         BrowserView(webView: webView)
-          .id(activeTab.id)
           .background(Color(NSColor.windowBackgroundColor))
       } else {
         ZStack {
