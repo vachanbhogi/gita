@@ -81,23 +81,25 @@ class BrowserEngine {
 
   func closeTab(id: UUID, uiState: UIState) {
     guard let index = tabs.firstIndex(where: { $0.id == id }) else { return }
+    let closedTab = tabs[index]
+    closedTab.webView?.stopLoading()
+    closedTab.webView?.navigationDelegate = nil
+
     withAnimation(.spring(response: 0.32, dampingFraction: 0.82)) {
-      let closedTab = tabs.remove(at: index)
-      closedTab.webView?.stopLoading()
-      closedTab.webView?.navigationDelegate = nil
+      tabs.remove(at: index)
+    }
 
-      if activeTabId == id {
-        if !tabs.isEmpty {
-          let newIndex = min(index, tabs.count - 1)
-          selectTab(id: tabs[newIndex].id)
-        } else {
-          addNewTab(uiState: uiState)
-        }
+    if activeTabId == id {
+      if !tabs.isEmpty {
+        let newIndex = min(index, tabs.count - 1)
+        selectTab(id: tabs[newIndex].id)
+      } else {
+        addNewTab(uiState: uiState)
       }
+    }
 
-      if uiState.sidebarFocusedIndex >= tabs.count {
-        uiState.sidebarFocusedIndex = max(0, tabs.count - 1)
-      }
+    if uiState.sidebarFocusedIndex >= tabs.count {
+      uiState.sidebarFocusedIndex = max(0, tabs.count - 1)
     }
   }
 
