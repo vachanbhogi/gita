@@ -13,6 +13,7 @@ enum ErrorPageRenderer {
       <html>
       <head>
       <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline';">
       <style>
       body {
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -97,7 +98,7 @@ enum ErrorPageRenderer {
           <h1>\(escapedTitle)</h1>
           <p>\(escapedMessage)</p>
           <div class="url-text">\(escapedURL)</div>
-          <a class="button" href="javascript:window.location.reload()">Reload Page</a>
+          <a class="button" href="gita://reload">Reload Page</a>
       </div>
       </body>
       </html>

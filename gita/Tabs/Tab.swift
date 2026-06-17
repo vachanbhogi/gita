@@ -189,6 +189,13 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
   ) {
     if let url = navigationAction.request.url {
       let scheme = url.scheme?.lowercased()
+
+      if scheme == "gita" && url.host == "reload" {
+        decisionHandler(.cancel)
+        self.reload()
+        return
+      }
+
       if scheme == "javascript" || scheme == "file" {
         decisionHandler(.cancel)
         return
