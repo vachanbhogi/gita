@@ -37,7 +37,7 @@ struct ChromeBar: View {
       Spacer().frame(width: 78)
 
       // Sidebar toggle
-      ChromeButton(icon: "sidebar.leading", size: 13) {
+      ChromeButton(icon: "sidebar.leading", size: 13, tooltip: "Toggle Sidebar") {
         withAnimation(.spring(response: 0.28, dampingFraction: 0.82)) {
           if !uiState.isVerticalTabs {
             uiState.isVerticalTabs = true
@@ -67,13 +67,14 @@ struct ChromeBar: View {
       Spacer().frame(width: 4)
 
       // Trailing controls
-      ChromeButton(icon: "square.and.arrow.up", size: 12.5) {}
-      ChromeButton(icon: "textformat.size", size: 12) {}
+      ChromeButton(icon: "square.and.arrow.up", size: 12.5, tooltip: "Share") {}
+      ChromeButton(icon: "textformat.size", size: 12, tooltip: "Text Size") {}
 
       // Layout switcher
       ChromeButton(
         icon: uiState.isVerticalTabs ? "rectangle.split.1x2" : "rectangle.split.2x1",
-        size: 13
+        size: 13,
+        tooltip: "Toggle Layout"
       ) {
         withAnimation(.spring(response: 0.3, dampingFraction: 0.82)) {
           uiState.isVerticalTabs.toggle()
@@ -81,7 +82,7 @@ struct ChromeBar: View {
       }
 
       // New tab — rightmost
-      ChromeButton(icon: "plus", size: 13) {
+      ChromeButton(icon: "plus", size: 13, tooltip: "New Tab") {
         engine.addNewTab(uiState: uiState)
       }
       .padding(.trailing, 10)
@@ -129,6 +130,7 @@ struct ChromeBar: View {
         }
         .buttonStyle(.plain)
         .onHover { hoveringNewTab = $0 }
+        .help("New Tab")
         .padding(.leading, 6)
       }
       .padding(.horizontal, 4)

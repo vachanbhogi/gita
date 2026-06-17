@@ -40,6 +40,7 @@ struct AddressPill: View {
                 ? AnyShapeStyle(Color.primary.opacity(0.35))
                 : AnyShapeStyle(Color.orange.opacity(0.7))
             )
+            .help(tab.isSecure ? "Secure Connection" : "Insecure Connection")
 
           Text(displayHost.isEmpty ? "Search or enter website name" : displayHost)
             .font(.system(size: 12, weight: .regular))
