@@ -18,12 +18,13 @@ struct BookmarksView: View {
   private var filteredRecords: [BookmarkRecord] {
     let base = activeRecords
     guard !searchText.isEmpty else { return base }
-    let query = searchText.lowercased()
+    // ⚡ Bolt Optimization: Use localizedStandardContains instead of lowercased().contains()
+    // This avoids creating new String allocations for every record during search.
     return base.filter {
-      $0.title.lowercased().contains(query)
-        || $0.domain.lowercased().contains(query)
-        || $0.note.lowercased().contains(query)
-        || $0.canonicalURL.lowercased().contains(query)
+      $0.title.localizedStandardContains(searchText)
+        || $0.domain.localizedStandardContains(searchText)
+        || $0.note.localizedStandardContains(searchText)
+        || $0.canonicalURL.localizedStandardContains(searchText)
     }
   }
 

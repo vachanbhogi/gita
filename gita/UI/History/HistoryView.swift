@@ -15,11 +15,12 @@ struct HistoryView: View {
 
   private var filteredRecords: [VisitRecord] {
     guard !searchText.isEmpty else { return records }
-    let query = searchText.lowercased()
+    // ⚡ Bolt Optimization: Use localizedStandardContains instead of lowercased().contains()
+    // This avoids creating new String allocations for every record during search.
     return records.filter {
-      $0.title.lowercased().contains(query)
-        || $0.domain.lowercased().contains(query)
-        || $0.canonicalURL.lowercased().contains(query)
+      $0.title.localizedStandardContains(searchText)
+        || $0.domain.localizedStandardContains(searchText)
+        || $0.canonicalURL.localizedStandardContains(searchText)
     }
   }
 
