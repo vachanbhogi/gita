@@ -3,11 +3,12 @@ import SwiftUI
 struct ChromeButton: View {
   let icon: String
   var size: CGFloat = 13
+  var tooltip: String? = nil
   let action: () -> Void
   @State private var hovered = false
 
   var body: some View {
-    Button(action: action) {
+    let button = Button(action: action) {
       Image(systemName: icon)
         .font(.system(size: size, weight: .regular))
         .foregroundStyle(Color.primary.opacity(hovered ? 0.85 : 0.55))
@@ -19,5 +20,11 @@ struct ChromeButton: View {
     }
     .buttonStyle(PressableButtonStyle())
     .onHover { hovered = $0 }
+
+    if let tooltip = tooltip {
+      button.help(tooltip)
+    } else {
+      button
+    }
   }
 }
