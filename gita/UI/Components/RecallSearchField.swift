@@ -15,6 +15,16 @@ struct RecallSearchField: View {
         .textFieldStyle(.plain)
         .font(.system(size: 13))
         .disabled(isDisabled)
+
+      if !text.isEmpty && !isDisabled {
+        Button(action: { text = "" }) {
+          Image(systemName: "xmark.circle.fill")
+            .font(.system(size: 12))
+            .foregroundStyle(.secondary)
+        }
+        .buttonStyle(.plain)
+        .help("Clear search")
+      }
     }
     .padding(.horizontal, 10)
     .padding(.vertical, 7)

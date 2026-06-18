@@ -1,0 +1,3 @@
+## 2024-05-24 - Clear buttons in custom Search Fields
+**Learning:** Custom SwiftUI text fields used for search inputs often lack native clear buttons, leading to friction when users need to reset their search query. Adding a custom clear button (`xmark.circle.fill`) improves the UX significantly. Additionally, any custom icon-only clear button needs a `.help()` modifier to ensure it is accessible to screen readers and provides a tooltip on hover.
+**Action:** When implementing custom search fields, always include a conditionally visible clear button and ensure it has an appropriate accessibility label/tooltip using `.help()`.
