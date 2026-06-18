@@ -20,6 +20,10 @@ class BrowserEngine {
 
   init() {
     // Initialize with a default tab
+    AdBlockManager.shared.onRulesReady { [weak self] in
+      guard let self else { return }
+      self.retrofitAdBlockRules()
+    }
     let defaultTab = createNewTab(with: "https://duckduckgo.com")
     self.tabs = [defaultTab]
     self.activeTabId = defaultTab.id
@@ -35,6 +39,7 @@ class BrowserEngine {
   func createNewTab(with urlString: String = "https://duckduckgo.com") -> Tab {
     let config = WKWebViewConfiguration()
     config.processPool = processPool
+    AdBlockWebViewConfigurator.apply(to: config)
     let webView = WKWebView(frame: .zero, configuration: config)
     webView.setValue(true, forKey: "drawsBackground")
 
@@ -161,6 +166,7 @@ class BrowserEngine {
   private func restoreTab(at index: Int) {
     let config = WKWebViewConfiguration()
     config.processPool = processPool
+    AdBlockWebViewConfigurator.apply(to: config)
     let webView = WKWebView(frame: .zero, configuration: config)
     webView.setValue(true, forKey: "drawsBackground")
 
@@ -284,5 +290,10 @@ class BrowserEngine {
       return String(subString[..<spaceIndex])
     }
     return String(subString)
+  }
+
+  private func retrofitAdBlockRules() {
+    let webViews = tabs.compactMap(\.webView)
+    AdBlockManager.shared.retrofitContentRules(on: webViews)
   }
 }

@@ -1,0 +1,23 @@
+{
+  "adblock_version": "0.12.5",
+  "generated_at": "1781768037",
+  "lists": [
+    {
+      "name": "easylist",
+      "sha256": "1947bd2cee7697eed40f837f7da6054bbfb8be26889f68fbcda6c2984671cdcb"
+    },
+    {
+      "name": "easyprivacy",
+      "sha256": "938bc75eaab367961dbe5d7f10d5d45ce6c1268d828d1050e1b2209f79f65055"
+    },
+    {
+      "name": "ublock-filters",
+      "sha256": "4c6be300cbe27a3c21148b7963568d94af4989d8bbbf96aa209cec012d9c669a"
+    }
+  ],
+  "resources_sha256": "e99ad27953e0b7a1160f019b45a053f872843650444ca2d6de9e633959b268b2",
+  "chunk_count": 4,
+  "rule_counts": {
+    "content_blocking": 134994
+  }
+}
