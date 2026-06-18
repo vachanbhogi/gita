@@ -46,6 +46,28 @@ struct AppCommands: Commands {
         .keyboardShortcut("b", modifiers: [.command, .shift])
     }
 
+    CommandMenu("Shields") {
+      Button(AdBlockSettings.shared.isEnabled ? "Turn Shields Off" : "Turn Shields On") {
+        AdBlockManager.shared.toggleEnabled(reloadWebView: engine.activeTab?.webView)
+      }
+      .keyboardShortcut("e", modifiers: [.command, .shift])
+
+      Divider()
+
+      if let tab = engine.activeTab,
+        let host = URL(string: tab.url)?.host,
+        AdBlockSiteSettings.shared.isAllowed(host: host)
+      {
+        Button("Enable Shields on This Site") {
+          AdBlockManager.shared.enableOnCurrentSite(tab: tab)
+        }
+      } else if let tab = engine.activeTab {
+        Button("Disable Shields on This Site") {
+          AdBlockManager.shared.disableOnCurrentSite(tab: tab)
+        }
+      }
+    }
+
     CommandMenu("History") {
       ForEach(HistoryClearRange.allCases) { range in
         Button("Clear \(range.rawValue)…") {

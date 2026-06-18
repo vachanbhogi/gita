@@ -1,0 +1,19 @@
+[[lists]]
+name = "easylist"
+url = "https://easylist.to/easylist/easylist.txt"
+
+[[lists]]
+name = "easyprivacy"
+url = "https://easylist.to/easylist/easyprivacy.txt"
+
+[[lists]]
+name = "ublock-filters"
+url = "https://raw.githubusercontent.com/uBlockOrigin/uAssets/master/filters/filters.txt"
+
+[[lists]]
+name = "ublock-annoyances"
+url = "https://raw.githubusercontent.com/uBlockOrigin/uAssets/master/filters/annoyances-others.txt"
+
+[resources]
+name = "brave-resources"
+url = "https://raw.githubusercontent.com/brave/adblock-resources/master/dist/resources.json"

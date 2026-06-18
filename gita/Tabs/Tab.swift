@@ -235,6 +235,20 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
       }
     }
 
+    if AdBlockManager.shared.shouldBlock(
+      navigationAction: navigationAction,
+      sourceURL: webView.url
+    ) {
+      decisionHandler(.cancel)
+      return
+    }
+
+    if navigationAction.targetFrame?.isMainFrame == true,
+      let targetURL = navigationAction.request.url
+    {
+      AdBlockManager.shared.syncPolicy(for: webView, url: targetURL)
+    }
+
     pendingNavigationType = navigationAction.navigationType
     decisionHandler(.allow)
   }
@@ -245,6 +259,13 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
       if let wv = self?.webView {
         self?.state = .loading(wv, progress: 0)
       }
+    }
+  }
+
+  func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
+    Task { @MainActor [weak self] in
+      guard self != nil, let url = webView.url else { return }
+      AdBlockManager.shared.syncPolicy(for: webView, url: url)
     }
   }
 
