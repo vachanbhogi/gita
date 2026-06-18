@@ -19,6 +19,8 @@ struct ChromeBar: View {
       if !uiState.isVerticalTabs {
         tabStrip
           .background(Color.primary.opacity(0.03))
+
+        HorizontalBookmarkStrip(engine: engine, uiState: uiState)
       }
     }
     .background(

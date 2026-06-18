@@ -34,6 +34,18 @@ struct AppCommands: Commands {
         .keyboardShortcut("y", modifiers: .command)
     }
 
+    CommandMenu("Bookmarks") {
+      Button("Add Bookmark…") {
+        if let tab = engine.activeTab {
+          uiState.presentBookmarkSheet(for: tab)
+        }
+      }
+      .keyboardShortcut("d", modifiers: .command)
+
+      Button("Show Bookmarks") { uiState.isBookmarksVisible = true }
+        .keyboardShortcut("b", modifiers: [.command, .shift])
+    }
+
     CommandMenu("History") {
       ForEach(HistoryClearRange.allCases) { range in
         Button("Clear \(range.rawValue)…") {

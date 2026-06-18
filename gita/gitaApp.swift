@@ -1,5 +1,5 @@
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 @main
 struct GitaApp: App {
@@ -10,7 +10,7 @@ struct GitaApp: App {
     WindowGroup {
       ContentView(engine: engine, uiState: uiState)
         .frame(minWidth: 1100, minHeight: 720)
-        .modelContainer(HistoryStore.shared.container)
+        .modelContainer(BrowserDataStore.shared.container)
     }
     .commands { AppCommands(engine: engine, uiState: uiState) }
     .windowStyle(.hiddenTitleBar)

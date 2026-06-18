@@ -2,14 +2,6 @@ import Foundation
 import SwiftData
 import WebKit
 
-enum HistoryClearRange: String, CaseIterable, Identifiable {
-  case lastHour = "Last Hour"
-  case today = "Today"
-  case all = "All History"
-
-  var id: String { rawValue }
-}
-
 @MainActor
 final class HistoryStore {
   static let shared = HistoryStore()
@@ -17,11 +9,13 @@ final class HistoryStore {
   private static let enabledKey = "gita.historyEnabled"
   private static let retentionDays = 30
 
-  let container: ModelContainer
-
   private let debounceInterval: TimeInterval = 30
   private var lastRecordedCanonicalURL: String?
   private var lastRecordedAt: Date?
+
+  private var context: ModelContext {
+    BrowserDataStore.shared.container.mainContext
+  }
 
   var isEnabled: Bool {
     get {
@@ -34,13 +28,6 @@ final class HistoryStore {
   }
 
   private init() {
-    let schema = Schema([VisitRecord.self])
-    let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-    do {
-      container = try ModelContainer(for: schema, configurations: [config])
-    } catch {
-      fatalError("Failed to create history store: \(error)")
-    }
     pruneExpiredRecords()
   }
 
@@ -71,7 +58,6 @@ final class HistoryStore {
     lastRecordedCanonicalURL = canonical
     lastRecordedAt = now
 
-    let context = container.mainContext
     let domain = URLCanonicalizer.domain(for: url)
     let pageTitle = title.isEmpty ? domain : title
 
@@ -101,13 +87,11 @@ final class HistoryStore {
   }
 
   func deleteRecord(_ record: VisitRecord) {
-    let context = container.mainContext
     context.delete(record)
     try? context.save()
   }
 
   func forgetDomain(_ domain: String) {
-    let context = container.mainContext
     let normalized = domain.lowercased()
     let descriptor = FetchDescriptor<VisitRecord>(
       predicate: #Predicate { $0.domain == normalized }
@@ -117,14 +101,13 @@ final class HistoryStore {
       for record in records {
         context.delete(record)
       }
-      try? context.save()
+      try context.save()
     } catch {
       print("HistoryStore forgetDomain failed: \(error)")
     }
   }
 
   func clear(range: HistoryClearRange) {
-    let context = container.mainContext
     let cutoff = cutoffDate(for: range)
     let descriptor: FetchDescriptor<VisitRecord>
 
@@ -150,7 +133,6 @@ final class HistoryStore {
   }
 
   func pruneExpiredRecords() {
-    let context = container.mainContext
     guard
       let cutoff = Calendar.current.date(
         byAdding: .day, value: -Self.retentionDays, to: Date())
