@@ -27,6 +27,20 @@ struct AppCommands: Commands {
 
       Button("Reload Page") { engine.activeTab?.reload() }
         .keyboardShortcut("r", modifiers: .command)
+
+      Divider()
+
+      Button("Show History") { uiState.isHistoryVisible = true }
+        .keyboardShortcut("y", modifiers: .command)
+    }
+
+    CommandMenu("History") {
+      ForEach(HistoryClearRange.allCases) { range in
+        Button("Clear \(range.rawValue)…") {
+          uiState.pendingClearHistoryRange = range
+          uiState.showClearHistoryConfirmation = true
+        }
+      }
     }
 
     CommandMenu("Tab") {

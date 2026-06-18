@@ -29,6 +29,26 @@ struct ContentView: View {
     .frame(minWidth: 1100, minHeight: 720)
     // CRITICAL: Tells macOS to draw your SwiftUI views over the title bar area
     .ignoresSafeArea(.container, edges: .top)
+    .sheet(isPresented: Bindable(uiState).isHistoryVisible) {
+      HistoryView(
+        engine: engine,
+        uiState: uiState,
+        isPresented: Bindable(uiState).isHistoryVisible
+      )
+      .presentationBackground(.clear)
+    }
+    .confirmationDialog(
+      "Clear \(uiState.pendingClearHistoryRange.rawValue)?",
+      isPresented: Bindable(uiState).showClearHistoryConfirmation,
+      titleVisibility: .visible
+    ) {
+      Button("Clear \(uiState.pendingClearHistoryRange.rawValue)", role: .destructive) {
+        HistoryStore.shared.clear(range: uiState.pendingClearHistoryRange)
+      }
+      Button("Cancel", role: .cancel) {}
+    } message: {
+      Text("This cannot be undone.")
+    }
   }
 
   @ViewBuilder

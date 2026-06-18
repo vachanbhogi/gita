@@ -10,6 +10,7 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
   var state: TabState
   var lastActiveTime: Date
   private var observations: [NSKeyValueObservation] = []
+  private var pendingNavigationType: WKNavigationType?
   var failedURL: String?
 
   var url: String = ""
@@ -166,9 +167,39 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
     failedURL = nil
     webView?.goBack()
   }
+
   func goForward() {
     failedURL = nil
     webView?.goForward()
+  }
+
+  func go(to item: WKBackForwardListItem) {
+    failedURL = nil
+    webView?.go(to: item)
+  }
+
+  var backMenuItems: [WKBackForwardListItem] {
+    guard let list = webView?.backForwardList else { return [] }
+    return Self.collapsedStackItems(Array(list.backList.reversed()))
+  }
+
+  var forwardMenuItems: [WKBackForwardListItem] {
+    guard let list = webView?.backForwardList else { return [] }
+    return Self.collapsedStackItems(Array(list.forwardList))
+  }
+
+  private static func collapsedStackItems(_ items: [WKBackForwardListItem]) -> [WKBackForwardListItem] {
+    guard !items.isEmpty else { return [] }
+    var result: [WKBackForwardListItem] = []
+    for item in items {
+      let domain = item.url.host?.lowercased() ?? ""
+      if let last = result.last, (last.url.host?.lowercased() ?? "") == domain, !domain.isEmpty {
+        result[result.count - 1] = item
+      } else {
+        result.append(item)
+      }
+    }
+    return result
   }
 
   func reload() {
@@ -201,6 +232,8 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
         return
       }
     }
+
+    pendingNavigationType = navigationAction.navigationType
     decisionHandler(.allow)
   }
 
@@ -215,9 +248,20 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
 
   func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
     Task { @MainActor [weak self] in
-      self?.state = .active(webView)
-      let title = webView.title ?? ""
-      self?.title = title.isEmpty ? "New Tab" : title
+      guard let self = self else { return }
+
+      let navigationType = self.pendingNavigationType ?? .other
+      self.pendingNavigationType = nil
+      let isErrorPage = if case .failed = self.state { true } else { false }
+
+      if !isErrorPage {
+        self.state = .active(webView)
+        let title = webView.title ?? ""
+        self.title = title.isEmpty ? "New Tab" : title
+      }
+
+      guard !isErrorPage, self.failedURL == nil, let url = webView.url else { return }
+      HistoryStore.shared.recordVisit(url: url, title: self.title, navigationType: navigationType)
     }
   }
 
