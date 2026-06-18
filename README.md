@@ -81,6 +81,27 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 - Ad-block resource files are located under `gita/Resources/AdBlock`.
 - The Rust library is referenced in the Xcode project as a `.dylib` output from the Rust build.
 
+## Keyboard shortcuts
+
+The app exposes several macOS keyboard shortcuts in the app menus:
+
+- Command + T — New tab
+- Command + W — Close tab
+- Command + L — Focus location/address bar
+- Command + [ — Go back
+- Command + ] — Go forward
+- Command + R — Reload page
+- Command + Shift + B — Show bookmarks
+- Command + Y — Show history
+- Command + Shift + E — Toggle shields
+- Command + 1..9 — Switch to numbered tabs
+
+## Getting started
+
+1. Open `gita/gita.xcodeproj` in Xcode.
+2. Build and run the `gita` macOS target.
+3. Use the toolbar and address bar to navigate, or use the keyboard shortcuts above.
+
 ## Troubleshooting
 
 - If build fails with `Rust toolchain not found`, ensure `cargo` is installed and available in Xcode’s shell environment.
