@@ -188,7 +188,9 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
     return Self.collapsedStackItems(Array(list.forwardList))
   }
 
-  private static func collapsedStackItems(_ items: [WKBackForwardListItem]) -> [WKBackForwardListItem] {
+  private static func collapsedStackItems(_ items: [WKBackForwardListItem])
+    -> [WKBackForwardListItem]
+  {
     guard !items.isEmpty else { return [] }
     var result: [WKBackForwardListItem] = []
     for item in items {
