@@ -61,11 +61,13 @@ final class ContentRuleInstaller {
 
     for index in 0..<manifest.chunkCount {
       let resourceName = "content-rules-\(index)"
-      guard let url = AdBlockResourcePaths.url(
-        forResource: resourceName,
-        withExtension: "json",
-        bundle: bundle
-      ) else {
+      guard
+        let url = AdBlockResourcePaths.url(
+          forResource: resourceName,
+          withExtension: "json",
+          bundle: bundle
+        )
+      else {
         throw AdBlockError.missingResource("\(resourceName).json")
       }
 

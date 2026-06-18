@@ -36,11 +36,13 @@ struct FiltersVersionManifest: Codable, Equatable {
   }
 
   static func load(from bundle: Bundle = .main) throws -> FiltersVersionManifest {
-    guard let url = AdBlockResourcePaths.url(
-      forResource: "filters-version",
-      withExtension: "json",
-      bundle: bundle
-    ) else {
+    guard
+      let url = AdBlockResourcePaths.url(
+        forResource: "filters-version",
+        withExtension: "json",
+        bundle: bundle
+      )
+    else {
       throw AdBlockError.missingResource("filters-version.json")
     }
     let data = try Data(contentsOf: url)

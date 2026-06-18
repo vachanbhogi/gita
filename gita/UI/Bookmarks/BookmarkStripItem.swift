@@ -15,18 +15,18 @@ struct BookmarkStripItem: View {
   @State private var hoverTask: Task<Void, Never>?
 
   var body: some View {
-  Group {
-    switch layout {
-    case .horizontal:
-      horizontalBody
-    case .vertical:
-      verticalBody
+    Group {
+      switch layout {
+      case .horizontal:
+        horizontalBody
+      case .vertical:
+        verticalBody
+      }
     }
-  }
-  .onDisappear {
-    hoverTask?.cancel()
-    showNotePopover = false
-  }
+    .onDisappear {
+      hoverTask?.cancel()
+      showNotePopover = false
+    }
   }
 
   private var horizontalBody: some View {

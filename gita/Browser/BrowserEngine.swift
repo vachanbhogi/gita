@@ -208,13 +208,24 @@ class BrowserEngine {
 
   private func enforceLRULimit() {
     // Keep at most 4 tabs loaded (1 active + 3 background), suspend the oldest
-    let activeTabs = tabs.filter { $0.webView != nil && $0.id != activeTabId }
-    guard activeTabs.count > 3 else { return }
+    var activeBackgroundCount = 0
+    var oldestIndex: Int?
+    var oldestTime: Date?
 
-    if let oldest = activeTabs.min(by: { $0.lastActiveTime < $1.lastActiveTime }),
-      let index = tabs.firstIndex(where: { $0.id == oldest.id })
-    {
-      suspendTab(at: index)
+    for (index, tab) in tabs.enumerated() {
+      if tab.webView != nil && tab.id != activeTabId {
+        activeBackgroundCount += 1
+
+        let time = tab.lastActiveTime
+        if oldestTime == nil || time < oldestTime! {
+          oldestTime = time
+          oldestIndex = index
+        }
+      }
+    }
+
+    if activeBackgroundCount > 3, let indexToSuspend = oldestIndex {
+      suspendTab(at: indexToSuspend)
     }
   }
 

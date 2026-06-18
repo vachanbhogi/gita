@@ -5,7 +5,8 @@ struct ContentRuleCache: Codable, Equatable {
   let ruleListIdentifiers: [String]
 
   private static var cacheURL: URL {
-    let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+    let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)
+      .first!
     let folder = base.appendingPathComponent("Gita/AdBlock", isDirectory: true)
     try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
     return folder.appendingPathComponent("content-rule-cache.json")
