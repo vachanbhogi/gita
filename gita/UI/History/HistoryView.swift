@@ -78,7 +78,8 @@ struct HistoryView: View {
 
   private var historyList: some View {
     List {
-      ForEach(HistoryGrouper.grouped(records: filteredRecords), id: \.0) { section, sectionRecords in
+      ForEach(HistoryGrouper.grouped(records: filteredRecords), id: \.0) {
+        section, sectionRecords in
         Section {
           ForEach(sectionRecords) { record in
             HistoryRow(

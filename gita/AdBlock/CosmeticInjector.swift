@@ -41,16 +41,17 @@ enum CosmeticInjector {
   }
 
   private static func hideStyleScript(for css: String) -> String {
-    let escaped = css
+    let escaped =
+      css
       .replacingOccurrences(of: "\\", with: "\\\\")
       .replacingOccurrences(of: "`", with: "\\`")
       .replacingOccurrences(of: "$", with: "\\$")
     return """
-    (function(){
-      var style = document.createElement('style');
-      style.textContent = `\(escaped)`;
-      (document.head || document.documentElement).appendChild(style);
-    })();
-    """
+      (function(){
+        var style = document.createElement('style');
+        style.textContent = `\(escaped)`;
+        (document.head || document.documentElement).appendChild(style);
+      })();
+      """
   }
 }
