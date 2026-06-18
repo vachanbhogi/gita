@@ -246,7 +246,7 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
     if navigationAction.targetFrame?.isMainFrame == true,
       let targetURL = navigationAction.request.url
     {
-      AdBlockManager.shared.prepareCosmetics(for: webView, url: targetURL)
+      AdBlockManager.shared.syncPolicy(for: webView, url: targetURL)
     }
 
     pendingNavigationType = navigationAction.navigationType
@@ -265,7 +265,7 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
   func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
     Task { @MainActor [weak self] in
       guard self != nil, let url = webView.url else { return }
-      AdBlockManager.shared.prepareCosmetics(for: webView, url: url)
+      AdBlockManager.shared.syncPolicy(for: webView, url: url)
     }
   }
 

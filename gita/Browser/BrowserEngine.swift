@@ -32,6 +32,9 @@ class BrowserEngine {
   }
 
   private func setup() {
+    AdBlockManager.shared.registerWebViewProvider { [weak self] in
+      self?.tabs.compactMap(\.webView) ?? []
+    }
     startInactivityTimer()
     setupMemoryPressureListener()
   }

@@ -69,6 +69,7 @@ struct ChromeBar: View {
       Spacer().frame(width: 4)
 
       // Trailing controls
+      ShieldsButton(engine: engine)
       ChromeButton(icon: "square.and.arrow.up", size: 12.5, tooltip: "Share") {}
       ChromeButton(icon: "textformat.size", size: 12, tooltip: "Text Size") {}
 

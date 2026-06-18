@@ -1,6 +1,6 @@
 {
   "adblock_version": "0.12.5",
-  "generated_at": "1781768037",
+  "generated_at": "1781769065",
   "lists": [
     {
       "name": "easylist",
@@ -13,11 +13,15 @@
     {
       "name": "ublock-filters",
       "sha256": "4c6be300cbe27a3c21148b7963568d94af4989d8bbbf96aa209cec012d9c669a"
+    },
+    {
+      "name": "ublock-annoyances",
+      "sha256": "8e84d4abe87ef4475797cc7e44ce8c0854c7d1f4d6cb8de500bc66c4d9aabe57"
     }
   ],
   "resources_sha256": "e99ad27953e0b7a1160f019b45a053f872843650444ca2d6de9e633959b268b2",
   "chunk_count": 4,
   "rule_counts": {
-    "content_blocking": 134994
+    "content_blocking": 135635
   }
 }
