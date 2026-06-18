@@ -52,10 +52,18 @@ struct FaviconView: View {
 
   @State private var image: NSImage?
 
+  // ⚡ Bolt Optimization: Synchronously resolve from cache to avoid flicker on re-render.
+  private var resolvedImage: NSImage? {
+    if let url = url, let cached = FaviconCache.shared.image(for: url) {
+      return cached
+    }
+    return image
+  }
+
   var body: some View {
     Group {
-      if let image {
-        Image(nsImage: image)
+      if let img = resolvedImage {
+        Image(nsImage: img)
           .resizable()
           .aspectRatio(contentMode: .fit)
           .frame(width: size, height: size)
@@ -67,8 +75,10 @@ struct FaviconView: View {
       }
     }
     .frame(width: size, height: size)
-    .task {
-      guard let url else { return }
+    // ⚡ Bolt Optimization: Use .task(id: url) to refetch if URL changes, and skip async if already cached.
+    .task(id: url) {
+      guard let url = url else { return }
+      if FaviconCache.shared.image(for: url) != nil { return }
       image = await FaviconCache.shared.loadImage(from: url)
     }
   }
