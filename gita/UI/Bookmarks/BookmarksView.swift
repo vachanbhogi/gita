@@ -11,10 +11,15 @@ struct BookmarksView: View {
   @Query(sort: \BookmarkRecord.createdAt, order: .reverse) private var records: [BookmarkRecord]
   @State private var searchText = ""
 
+  private var activeRecords: [BookmarkRecord] {
+    BookmarkQueryFilter.active(from: records)
+  }
+
   private var filteredRecords: [BookmarkRecord] {
-    guard !searchText.isEmpty else { return records }
+    let base = activeRecords
+    guard !searchText.isEmpty else { return base }
     let query = searchText.lowercased()
-    return records.filter {
+    return base.filter {
       $0.title.lowercased().contains(query)
         || $0.domain.lowercased().contains(query)
         || $0.note.lowercased().contains(query)

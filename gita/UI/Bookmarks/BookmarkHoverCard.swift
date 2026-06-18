@@ -20,6 +20,12 @@ struct BookmarkHoverCard: View {
         .font(.system(size: 10))
         .foregroundStyle(.tertiary)
         .lineLimit(1)
+
+      if let label = BookmarkExpirationLabel.shortLabel(for: record) {
+        Text("Expires in \(label)")
+          .font(.system(size: 10))
+          .foregroundStyle(.secondary)
+      }
     }
     .frame(maxWidth: 220, alignment: .leading)
   }

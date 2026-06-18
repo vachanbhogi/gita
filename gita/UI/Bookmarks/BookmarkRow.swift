@@ -43,6 +43,8 @@ struct BookmarkRow: View {
               .font(.system(size: 9))
               .foregroundStyle(.tertiary)
           }
+
+          BookmarkExpirationBadge(record: record)
         }
         .contentShape(Rectangle())
       }

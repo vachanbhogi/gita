@@ -11,6 +11,7 @@ final class BookmarkRecord {
   var pinOrder: Int
   var createdAt: Date
   var lastOpenedAt: Date?
+  var expiresAt: Date?
 
   init(
     canonicalURL: String,
@@ -20,7 +21,8 @@ final class BookmarkRecord {
     isPinned: Bool = false,
     pinOrder: Int = -1,
     createdAt: Date = Date(),
-    lastOpenedAt: Date? = nil
+    lastOpenedAt: Date? = nil,
+    expiresAt: Date? = nil
   ) {
     self.canonicalURL = canonicalURL
     self.title = title
@@ -30,5 +32,6 @@ final class BookmarkRecord {
     self.pinOrder = pinOrder
     self.createdAt = createdAt
     self.lastOpenedAt = lastOpenedAt
+    self.expiresAt = expiresAt
   }
 }

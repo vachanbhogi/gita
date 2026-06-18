@@ -44,6 +44,10 @@ struct BookmarkStripItem: View {
             .foregroundStyle(Color.primary.opacity(hovered ? 0.85 : 0.62))
             .lineLimit(1)
             .frame(maxWidth: density == .compact ? 88 : 120)
+
+          if density == .titled {
+            BookmarkExpirationBadge(record: record)
+          }
         }
       }
       .padding(.horizontal, density == .iconOnly ? 5 : 7)
@@ -95,6 +99,8 @@ struct BookmarkStripItem: View {
             .font(.system(size: 8))
             .foregroundStyle(.quaternary)
         }
+
+        BookmarkExpirationBadge(record: record)
       }
       .padding(.horizontal, 8)
       .frame(height: density.verticalRowHeight)
@@ -137,7 +143,7 @@ struct BookmarkStripItem: View {
     hovered = isHovering
     hoverTask?.cancel()
 
-    guard isHovering, !record.note.isEmpty else {
+    guard isHovering, !record.note.isEmpty || record.expiresAt != nil else {
       showNotePopover = false
       return
     }

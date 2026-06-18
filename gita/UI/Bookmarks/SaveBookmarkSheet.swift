@@ -8,6 +8,7 @@ struct SaveBookmarkSheet: View {
   @State private var title: String = ""
   @State private var note: String = ""
   @State private var pinToBar: Bool = false
+  @State private var expiration: BookmarkExpiration = .permanent
   @State private var errorMessage: String?
 
   var body: some View {
@@ -18,6 +19,8 @@ struct SaveBookmarkSheet: View {
         labeledField("Title", text: $title)
 
         labeledField("Note (optional)", text: $note)
+
+        BookmarkExpirationPicker(selection: $expiration)
 
         Toggle("Pin", isOn: $pinToBar)
           .toggleStyle(.switch)
@@ -48,7 +51,7 @@ struct SaveBookmarkSheet: View {
       }
       .padding(16)
     }
-    .frame(width: 360)
+    .frame(width: 380)
     .background {
       VisualEffectView(material: .hudWindow, blendingMode: .behindWindow)
     }
@@ -61,6 +64,7 @@ struct SaveBookmarkSheet: View {
       title = context.existing?.title ?? context.defaultTitle
       note = context.existing?.note ?? ""
       pinToBar = context.existing?.isPinned ?? false
+      expiration = context.existing.map(BookmarkExpirationResolver.expiration(for:)) ?? .permanent
     }
   }
 
@@ -103,7 +107,8 @@ struct SaveBookmarkSheet: View {
         url: context.url,
         title: title,
         note: note,
-        isPinned: pinToBar
+        isPinned: pinToBar,
+        expiration: expiration
       )
       onDismiss()
     } catch BookmarkStoreError.pinLimitReached {

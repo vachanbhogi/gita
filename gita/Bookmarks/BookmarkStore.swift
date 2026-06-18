@@ -14,15 +14,23 @@ final class BookmarkStore {
     BrowserDataStore.shared.container.mainContext
   }
 
-  private init() {}
+  private init() {
+    pruneExpired()
+  }
 
   func bookmark(for url: URL) -> BookmarkRecord? {
     guard let canonical = URLCanonicalizer.canonicalString(for: url) else { return nil }
-    return fetchOne(canonicalURL: canonical)
+    guard let record = fetchOne(canonicalURL: canonical) else { return nil }
+    guard BookmarkRecordStatus.isActive(record) else { return nil }
+    return record
   }
 
   func isBookmarked(url: URL) -> Bool {
     bookmark(for: url) != nil
+  }
+
+  func pruneExpired() {
+    BookmarkExpirationPruner.pruneExpired(in: context)
   }
 
   @discardableResult
@@ -30,8 +38,11 @@ final class BookmarkStore {
     url: URL,
     title: String,
     note: String,
-    isPinned: Bool
+    isPinned: Bool,
+    expiration: BookmarkExpiration
   ) throws -> BookmarkRecord {
+    pruneExpired()
+
     guard let canonical = URLCanonicalizer.canonicalString(for: url) else {
       throw BookmarkStoreError.invalidURL
     }
@@ -39,10 +50,12 @@ final class BookmarkStore {
     let domain = URLCanonicalizer.domain(for: url)
     let pageTitle = title.isEmpty ? domain : title
     let trimmedNote = note.trimmingCharacters(in: .whitespacesAndNewlines)
+    let expiresAt = BookmarkExpirationDate.expiresAt(for: expiration)
 
     if let existing = fetchOne(canonicalURL: canonical) {
       existing.title = pageTitle
       existing.note = trimmedNote
+      existing.expiresAt = expiresAt
       try applyPinState(isPinned, to: existing)
       try context.save()
       return existing
@@ -54,7 +67,8 @@ final class BookmarkStore {
       domain: domain,
       note: trimmedNote,
       isPinned: false,
-      pinOrder: -1
+      pinOrder: -1,
+      expiresAt: expiresAt
     )
     context.insert(record)
     try applyPinState(isPinned, to: record)
@@ -82,7 +96,8 @@ final class BookmarkStore {
       predicate: #Predicate { $0.isPinned },
       sortBy: [SortDescriptor(\.pinOrder)]
     )
-    return (try? context.fetch(descriptor)) ?? []
+    let records = (try? context.fetch(descriptor)) ?? []
+    return BookmarkQueryFilter.active(from: records)
   }
 
   private func fetchOne(canonicalURL: String) -> BookmarkRecord? {
