@@ -62,6 +62,8 @@ struct AddressPill: View {
           .scaleEffect(0.38)
           .frame(width: 10, height: 10)
       }
+
+      BookmarkStarButton(tab: tab, uiState: uiState)
     }
     .padding(.horizontal, 10)
     .frame(maxWidth: .infinity)

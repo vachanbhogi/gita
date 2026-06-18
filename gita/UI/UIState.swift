@@ -11,4 +11,18 @@ class UIState {
   var isHistoryVisible: Bool = false
   var showClearHistoryConfirmation: Bool = false
   var pendingClearHistoryRange: HistoryClearRange = .today
+  var isBookmarksVisible: Bool = false
+  var bookmarkSheetContext: BookmarkSheetContext?
+
+  func presentBookmarkSheet(for tab: Tab) {
+    bookmarkSheetContext = BookmarkSheetPresenter.context(for: tab)
+  }
+
+  func presentBookmarkEdit(for record: BookmarkRecord) {
+    bookmarkSheetContext = BookmarkSheetPresenter.context(for: record)
+  }
+
+  func dismissBookmarkSheet() {
+    bookmarkSheetContext = nil
+  }
 }

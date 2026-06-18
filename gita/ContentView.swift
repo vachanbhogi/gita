@@ -37,6 +37,21 @@ struct ContentView: View {
       )
       .presentationBackground(.clear)
     }
+    .sheet(isPresented: Bindable(uiState).isBookmarksVisible) {
+      BookmarksView(
+        engine: engine,
+        uiState: uiState,
+        isPresented: Bindable(uiState).isBookmarksVisible,
+        onEdit: { record in uiState.presentBookmarkEdit(for: record) }
+      )
+      .presentationBackground(.clear)
+    }
+    .sheet(item: Bindable(uiState).bookmarkSheetContext) { context in
+      SaveBookmarkSheet(context: context) {
+        uiState.dismissBookmarkSheet()
+      }
+      .presentationBackground(.clear)
+    }
     .confirmationDialog(
       "Clear \(uiState.pendingClearHistoryRange.rawValue)?",
       isPresented: Bindable(uiState).showClearHistoryConfirmation,

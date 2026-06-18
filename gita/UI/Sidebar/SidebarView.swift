@@ -117,12 +117,14 @@ struct SidebarView: View {
           .padding(.horizontal, 8)
         }
         .scrollIndicators(.hidden)
+        .frame(maxHeight: .infinity)
         .onChange(of: uiState.sidebarFocusedIndex) { _, newIndex in
           scrollToTab(at: newIndex, proxy: proxy)
         }
       }
 
-      Spacer()
+      VerticalBookmarkStrip(engine: engine, uiState: uiState)
+
       footer
     }
     .frame(width: 210)
