@@ -147,6 +147,13 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
       return
     }
 
+    // Extra check: parse as URL to catch bypasses using invisible characters (e.g. zero-width space)
+    if let parsedURL = URL(string: trimmed), let scheme = parsedURL.scheme?.lowercased() {
+      if scheme == "javascript" || scheme == "file" {
+        return
+      }
+    }
+
     // Heuristic: contains a dot without a space → likely a hostname, not a search query
     let url: URL
     if trimmed.contains("://") || trimmed.contains(".") && !trimmed.contains(" ") {
