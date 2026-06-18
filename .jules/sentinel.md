@@ -1,0 +1,4 @@
+## 2024-06-18 - XSS and Local File Access Bypass via Invisible Characters
+**Vulnerability:** The address bar navigation validation used a simple string `hasPrefix` check (`lowerTrimmed.hasPrefix("javascript:")`) after `.whitespacesAndNewlines` trimming to block unauthorized URI schemes. This check could be bypassed by inserting a Zero Width Space (`\u{200B}`) at the beginning of the payload. The browser's URL parser or execution context might still process the malicious scheme.
+**Learning:** Whitespace trimming is insufficient for security boundaries. `URL(string:)` is more robust and ignores certain invisible characters when parsing the scheme, meaning the naive prefix check blocks string literals while the parser ignores the invisible characters, leading to bypass.
+**Prevention:** Always parse untrusted input as a `URL` object and validate its `scheme` property explicitly, rather than relying on raw string prefix checks for URI scheme validation.
