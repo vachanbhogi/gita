@@ -1,0 +1,3 @@
+[bindings.swift]
+cdylib_name = "gita_adblock"
+omit_argument_labels = true

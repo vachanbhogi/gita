@@ -1,0 +1,25 @@
+[package]
+name = "gita_adblock"
+version = "0.1.0"
+edition.workspace = true
+
+[lib]
+crate-type = ["staticlib", "cdylib", "lib"]
+name = "gita_adblock"
+
+[[bin]]
+name = "uniffi-bindgen"
+path = "src/bin/uniffi-bindgen.rs"
+required-features = ["bindgen-cli"]
+
+[features]
+bindgen-cli = ["uniffi/cli"]
+
+[dependencies]
+adblock = { version = "=0.12.5", default-features = false, features = ["embedded-domain-resolver", "full-regex-handling", "content-blocking", "resource-assembler"] }
+once_cell = "1"
+thiserror = "2"
+uniffi = { version = "0.29", features = ["cli"] }
+
+[dev-dependencies]
+uniffi = { version = "0.29", features = ["bindgen-tests"] }
