@@ -167,6 +167,14 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
       url = searchURL
     }
 
+    // 🛡️ Sentinel: Validate scheme on the final parsed URL to prevent bypasses
+    // using invisible characters (e.g. zero-width space before the scheme).
+    if let scheme = url.scheme?.lowercased() {
+      if scheme == "javascript" || scheme == "file" {
+        return
+      }
+    }
+
     webView.load(URLRequest(url: url))
   }
 
