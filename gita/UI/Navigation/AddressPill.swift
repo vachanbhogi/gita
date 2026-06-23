@@ -20,15 +20,29 @@ struct AddressPill: View {
     HStack(spacing: 5) {
       ZStack {
         // The ACTUAL TextField (always handles hit testing and OS focus)
-        TextField(focused ? "Search or enter website name" : "", text: $editText)
-          .focused($focused)
-          .textFieldStyle(.plain)
-          .font(.system(size: 12))
-          .foregroundStyle(focused ? Color.primary : Color.clear)
-          .onSubmit {
-            tab.navigate(to: editText)
-            focused = false
+        HStack(spacing: 4) {
+          TextField(focused ? "Search or enter website name" : "", text: $editText)
+            .focused($focused)
+            .textFieldStyle(.plain)
+            .font(.system(size: 12))
+            .foregroundStyle(focused ? Color.primary : Color.clear)
+            .onSubmit {
+              tab.navigate(to: editText)
+              focused = false
+            }
+
+          if focused && !editText.isEmpty {
+            Button {
+              editText = ""
+            } label: {
+              Image(systemName: "xmark.circle.fill")
+                .font(.system(size: 11))
+                .foregroundStyle(Color.primary.opacity(0.4))
+            }
+            .buttonStyle(.plain)
+            .help("Clear address")
           }
+        }
 
         // Display mode — centered host (on top, but passes clicks to the text field)
         HStack(spacing: 4) {

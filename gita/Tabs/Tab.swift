@@ -163,7 +163,7 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
       url = searchURL
     }
 
-    // Defense-in-depth: Ensure the final resolved URL scheme is safe before loading
+    // Defense in depth: Verify the final resolved URL scheme is not malicious
     if let scheme = url.scheme?.lowercased(), scheme == "javascript" || scheme == "file" {
       return
     }
@@ -219,6 +219,10 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
     } else {
       webView?.reload()
     }
+  }
+
+  func stopLoading() {
+    webView?.stopLoading()
   }
 
   // MARK: - WKNavigationDelegate

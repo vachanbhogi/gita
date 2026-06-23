@@ -59,7 +59,11 @@ class BrowserEngine {
 
     upgradeToNativeUserAgent(for: webView)
     if let url = URL(string: urlString) {
-      webView.load(URLRequest(url: url))
+      // Defense in depth: Verify the final resolved URL scheme is not malicious
+      let scheme = url.scheme?.lowercased()
+      if scheme != "javascript" && scheme != "file" {
+        webView.load(URLRequest(url: url))
+      }
     }
 
     return tab
@@ -186,7 +190,11 @@ class BrowserEngine {
     if let state = savedState {
       webView.interactionState = state
     } else if let url = URL(string: savedURL) {
-      webView.load(URLRequest(url: url))
+      // Defense in depth: Verify the final resolved URL scheme is not malicious
+      let scheme = url.scheme?.lowercased()
+      if scheme != "javascript" && scheme != "file" {
+        webView.load(URLRequest(url: url))
+      }
     }
   }
 
