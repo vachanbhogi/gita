@@ -1,5 +1,6 @@
-import XCTest
 import SwiftData
+import XCTest
+
 @testable import gita
 
 @MainActor
@@ -83,13 +84,15 @@ final class BookmarkStoreTests: XCTestCase {
   func testSaveInvalidURLThrowsError() {
     let url = URL(string: "not-a-valid-url")!
 
-    XCTAssertThrowsError(try store.save(
-      url: url,
-      title: "Title",
-      note: "",
-      isPinned: false,
-      expiration: .permanent
-    )) { error in
+    XCTAssertThrowsError(
+      try store.save(
+        url: url,
+        title: "Title",
+        note: "",
+        isPinned: false,
+        expiration: .permanent
+      )
+    ) { error in
       XCTAssertEqual(error as? BookmarkStoreError, BookmarkStoreError.invalidURL)
     }
   }
