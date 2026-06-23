@@ -10,7 +10,6 @@ class BrowserEngine {
   var activeTabId: UUID = UUID()
   var activeTab: Tab? = nil
 
-  private let processPool = WKProcessPool()
   private var inactivityTimer: Timer?
   private var memoryPressureSource: DispatchSourceMemoryPressure?
 
@@ -41,7 +40,6 @@ class BrowserEngine {
 
   func createNewTab(with urlString: String = "https://duckduckgo.com") -> Tab {
     let config = WKWebViewConfiguration()
-    config.processPool = processPool
     AdBlockWebViewConfigurator.apply(to: config)
     let webView = WKWebView(frame: .zero, configuration: config)
     webView.setValue(true, forKey: "drawsBackground")
@@ -71,7 +69,7 @@ class BrowserEngine {
 
   func addNewTab(urlString: String = "https://duckduckgo.com", uiState: UIState) {
     let tab = createNewTab(with: urlString)
-    withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
+    _ = withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
       tabs.append(tab)
       selectTab(id: tab.id)
       uiState.sidebarFocusedIndex = tabs.count - 1
@@ -97,7 +95,7 @@ class BrowserEngine {
     closedTab.webView?.stopLoading()
     closedTab.webView?.navigationDelegate = nil
 
-    withAnimation(.spring(response: 0.32, dampingFraction: 0.82)) {
+    _ = withAnimation(.spring(response: 0.32, dampingFraction: 0.82)) {
       tabs.remove(at: index)
     }
 
@@ -151,12 +149,12 @@ class BrowserEngine {
 
   func focusSidebar(uiState: UIState) {
     if !uiState.isVerticalTabs {
-      withAnimation(.spring(response: 0.3, dampingFraction: 0.82)) {
+      _ = withAnimation(.spring(response: 0.3, dampingFraction: 0.82)) {
         uiState.isVerticalTabs = true
         uiState.sidebarVisible = true
       }
     } else if !uiState.sidebarVisible {
-      withAnimation(.spring(response: 0.3, dampingFraction: 0.82)) {
+      _ = withAnimation(.spring(response: 0.3, dampingFraction: 0.82)) {
         uiState.sidebarVisible = true
       }
     }
@@ -172,7 +170,6 @@ class BrowserEngine {
 
   private func restoreTab(at index: Int) {
     let config = WKWebViewConfiguration()
-    config.processPool = processPool
     AdBlockWebViewConfigurator.apply(to: config)
     let webView = WKWebView(frame: .zero, configuration: config)
     webView.setValue(true, forKey: "drawsBackground")
