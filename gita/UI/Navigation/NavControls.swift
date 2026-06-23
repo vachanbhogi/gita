@@ -35,7 +35,13 @@ struct NavControls: View {
         enabled: true,
         hovering: hoverReload,
         tooltip: tab.isLoading ? "Stop loading" : "Reload page",
-        action: { tab.reload() }
+        action: {
+          if tab.isLoading {
+            tab.stopLoading()
+          } else {
+            tab.reload()
+          }
+        }
       )
       .onHover { hoverReload = $0 }
     }

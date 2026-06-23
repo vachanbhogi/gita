@@ -5,32 +5,32 @@ final class AdBlockSiteSettings {
   static let shared = AdBlockSiteSettings()
 
   private static let allowlistKey = "gita.adblockSiteAllowlist"
-
-  // ⚡ Bolt Optimization: In-memory cache to avoid repeated disk reads and string allocations on the critical navigation path
-  private var cachedAllowlist: Set<String>?
+  private var cachedAllowlistedHosts: Set<String>?
   private let lock = NSLock()
 
   private init() {}
 
+  // ⚡ Bolt: Cache `allowlistedHosts` to avoid repeated UserDefaults access and implicit `Set`
+  // allocations on WKNavigationDelegate critical paths. We use NSLock for thread safety.
   private var allowlistedHosts: Set<String> {
     get {
       lock.lock()
       defer { lock.unlock() }
 
-      if let cached = cachedAllowlist {
+      if let cached = cachedAllowlistedHosts {
         return cached
       }
+
       let stored = UserDefaults.standard.stringArray(forKey: Self.allowlistKey) ?? []
-      let parsed = Set(stored.map { $0.lowercased() })
-      cachedAllowlist = parsed
-      return parsed
+      let value = Set(stored.map { $0.lowercased() })
+      cachedAllowlistedHosts = value
+      return value
     }
     set {
       lock.lock()
-      defer { lock.unlock() }
-
-      cachedAllowlist = newValue
+      cachedAllowlistedHosts = newValue
       UserDefaults.standard.set(Array(newValue).sorted(), forKey: Self.allowlistKey)
+      lock.unlock()
     }
   }
 
