@@ -225,6 +225,10 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
     }
   }
 
+  func stopLoading() {
+    webView?.stopLoading()
+  }
+
   // MARK: - WKNavigationDelegate
 
   func webView(
