@@ -167,6 +167,11 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
       url = searchURL
     }
 
+    // Defense in depth: Verify the final resolved URL scheme is not malicious
+    if let scheme = url.scheme?.lowercased(), scheme == "javascript" || scheme == "file" {
+      return
+    }
+
     webView.load(URLRequest(url: url))
   }
 
