@@ -93,13 +93,20 @@ final class HistoryStore {
 
   func forgetDomain(_ domain: String) {
     let normalized = domain.lowercased()
-    let descriptor = FetchDescriptor<VisitRecord>(
-      predicate: #Predicate { $0.domain == normalized }
-    )
     do {
-      let records = try context.fetch(descriptor)
-      for record in records {
-        context.delete(record)
+      if #available(macOS 15.0, iOS 18.0, *) {
+        try context.delete(
+          model: VisitRecord.self,
+          where: #Predicate { $0.domain == normalized }
+        )
+      } else {
+        let descriptor = FetchDescriptor<VisitRecord>(
+          predicate: #Predicate { $0.domain == normalized }
+        )
+        let records = try context.fetch(descriptor)
+        for record in records {
+          context.delete(record)
+        }
       }
       try context.save()
     } catch {
@@ -109,20 +116,30 @@ final class HistoryStore {
 
   func clear(range: HistoryClearRange) {
     let cutoff = cutoffDate(for: range)
-    let descriptor: FetchDescriptor<VisitRecord>
-
-    if let cutoff {
-      descriptor = FetchDescriptor<VisitRecord>(
-        predicate: #Predicate { $0.lastVisitedAt >= cutoff }
-      )
-    } else {
-      descriptor = FetchDescriptor<VisitRecord>()
-    }
 
     do {
-      let records = try context.fetch(descriptor)
-      for record in records {
-        context.delete(record)
+      if #available(macOS 15.0, iOS 18.0, *) {
+        if let cutoff {
+          try context.delete(
+            model: VisitRecord.self,
+            where: #Predicate { $0.lastVisitedAt >= cutoff }
+          )
+        } else {
+          try context.delete(model: VisitRecord.self)
+        }
+      } else {
+        let descriptor: FetchDescriptor<VisitRecord>
+        if let cutoff {
+          descriptor = FetchDescriptor<VisitRecord>(
+            predicate: #Predicate { $0.lastVisitedAt >= cutoff }
+          )
+        } else {
+          descriptor = FetchDescriptor<VisitRecord>()
+        }
+        let records = try context.fetch(descriptor)
+        for record in records {
+          context.delete(record)
+        }
       }
       try context.save()
       lastRecordedCanonicalURL = nil
@@ -138,15 +155,21 @@ final class HistoryStore {
         byAdding: .day, value: -Self.retentionDays, to: Date())
     else { return }
 
-    let descriptor = FetchDescriptor<VisitRecord>(
-      predicate: #Predicate { $0.lastVisitedAt < cutoff }
-    )
-
     do {
-      let expired = try context.fetch(descriptor)
-      guard !expired.isEmpty else { return }
-      for record in expired {
-        context.delete(record)
+      if #available(macOS 15.0, iOS 18.0, *) {
+        try context.delete(
+          model: VisitRecord.self,
+          where: #Predicate { $0.lastVisitedAt < cutoff }
+        )
+      } else {
+        let descriptor = FetchDescriptor<VisitRecord>(
+          predicate: #Predicate { $0.lastVisitedAt < cutoff }
+        )
+        let expired = try context.fetch(descriptor)
+        guard !expired.isEmpty else { return }
+        for record in expired {
+          context.delete(record)
+        }
       }
       try context.save()
     } catch {
