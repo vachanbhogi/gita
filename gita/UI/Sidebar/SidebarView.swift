@@ -78,6 +78,7 @@ struct SidebarView: View {
           )
         }
         .buttonStyle(PressableButtonStyle())
+        .help("Switch to Horizontal Tabs")
 
         Spacer()
       }

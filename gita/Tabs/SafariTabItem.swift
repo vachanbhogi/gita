@@ -30,6 +30,7 @@ struct SafariTabItem: View {
                 Image(systemName: "moon.fill")
                   .font(.system(size: 8))
                   .foregroundStyle(.quaternary)
+                  .help("Tab Suspended")
               } else {
                 FaviconView(url: tab.faviconURL, size: 13, iconSize: 10)
               }
