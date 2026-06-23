@@ -21,6 +21,10 @@ actor FaviconCache {
   func loadImage(from url: URL) async -> NSImage? {
     if let cached = image(for: url) { return cached }
 
+    // 🛡️ Sentinel: Defense in depth - restrict scheme to http/https to prevent SSRF and local file reads via file: scheme
+    let scheme = url.scheme?.lowercased()
+    guard scheme == "http" || scheme == "https" else { return nil }
+
     // ⚡ Bolt Optimization: If a task for this URL is already inflight, await its completion.
     // This prevents redundant network requests for the same favicon when multiple tabs open concurrently.
     if let existingTask = tasks[url] {
