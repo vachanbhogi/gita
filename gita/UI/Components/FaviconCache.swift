@@ -1,8 +1,25 @@
 import SwiftUI
 
+final class SendableCache<KeyType: AnyObject, ObjectType: AnyObject>: @unchecked Sendable {
+  private let cache = NSCache<KeyType, ObjectType>()
+
+  var countLimit: Int {
+    get { cache.countLimit }
+    set { cache.countLimit = newValue }
+  }
+
+  func object(forKey key: KeyType) -> ObjectType? {
+    cache.object(forKey: key)
+  }
+
+  func setObject(_ obj: ObjectType, forKey key: KeyType) {
+    cache.setObject(obj, forKey: key)
+  }
+}
+
 actor FaviconCache {
   static let shared = FaviconCache()
-  private let cache = NSCache<NSURL, NSImage>()
+  private let cache = SendableCache<NSURL, NSImage>()
   // ⚡ Bolt Optimization: Track inflight network requests to deduplicate concurrent fetches.
   private var tasks = [URL: Task<NSImage?, Never>]()
 
