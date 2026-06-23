@@ -141,13 +141,9 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
     let trimmed = input.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !trimmed.isEmpty else { return }
 
-    // Prevent direct execution of javascript or access to local files from address bar
-    let lowerTrimmed = trimmed.lowercased()
-    if lowerTrimmed.hasPrefix("javascript:") || lowerTrimmed.hasPrefix("file:") {
-      return
-    }
-
-    // Extra check: parse as URL to catch bypasses using invisible characters (e.g. zero-width space)
+    // Prevent direct execution of javascript or access to local files from address bar.
+    // Parse the URL securely and check the scheme instead of relying on String.hasPrefix()
+    // to catch bypasses using obfuscation with invisible characters (e.g. zero-width space).
     if let parsedURL = URL(string: trimmed), let scheme = parsedURL.scheme?.lowercased() {
       if scheme == "javascript" || scheme == "file" {
         return
@@ -167,12 +163,9 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
       url = searchURL
     }
 
-    // 🛡️ Sentinel: Validate scheme on the final parsed URL to prevent bypasses
-    // using invisible characters (e.g. zero-width space before the scheme).
-    if let scheme = url.scheme?.lowercased() {
-      if scheme == "javascript" || scheme == "file" {
-        return
-      }
+    // Defense in depth: Verify the final resolved URL scheme is not malicious
+    if let scheme = url.scheme?.lowercased(), scheme == "javascript" || scheme == "file" {
+      return
     }
 
     webView.load(URLRequest(url: url))
@@ -226,6 +219,10 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
     } else {
       webView?.reload()
     }
+  }
+
+  func stopLoading() {
+    webView?.stopLoading()
   }
 
   // MARK: - WKNavigationDelegate
