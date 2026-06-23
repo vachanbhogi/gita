@@ -20,7 +20,7 @@ struct AddressPill: View {
     HStack(spacing: 5) {
       ZStack {
         // The ACTUAL TextField (always handles hit testing and OS focus)
-        HStack {
+        HStack(spacing: 4) {
           TextField(focused ? "Search or enter website name" : "", text: $editText)
             .focused($focused)
             .textFieldStyle(.plain)
@@ -32,12 +32,12 @@ struct AddressPill: View {
             }
 
           if focused && !editText.isEmpty {
-            Button(action: {
+            Button {
               editText = ""
-            }) {
+            } label: {
               Image(systemName: "xmark.circle.fill")
-                .font(.system(size: 12))
-                .foregroundStyle(Color.primary.opacity(0.3))
+                .font(.system(size: 11))
+                .foregroundStyle(Color.primary.opacity(0.4))
             }
             .buttonStyle(.plain)
             .help("Clear address")

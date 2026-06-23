@@ -10,11 +10,14 @@ enum BookmarkStoreError: Error {
 final class BookmarkStore {
   static let shared = BookmarkStore()
 
+  private let injectedContext: ModelContext?
+
   private var context: ModelContext {
-    BrowserDataStore.shared.container.mainContext
+    injectedContext ?? BrowserDataStore.shared.container.mainContext
   }
 
-  private init() {
+  init(context: ModelContext? = nil) {
+    self.injectedContext = context
     pruneExpired()
   }
 
