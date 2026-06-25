@@ -64,7 +64,9 @@ final class HistoryStore {
   func recordVisit(url: URL, title: String, navigationType: WKNavigationType) {
     guard isEnabled else { return }
     guard navigationType != .backForward else { return }
-    guard let canonical = URLCanonicalizer.canonicalString(for: url) else { return }
+    // ⚡ Bolt Optimization: Cache canonical URL object to avoid double parsing for string and domain
+    guard let canonicalURL = URLCanonicalizer.canonicalize(url) else { return }
+    let canonical = canonicalURL.absoluteString
 
     let scheme = url.scheme?.lowercased() ?? ""
     if scheme == "gita" || scheme == "javascript" || scheme == "file" { return }
@@ -80,7 +82,7 @@ final class HistoryStore {
     lastRecordedCanonicalURL = canonical
     lastRecordedAt = now
 
-    let domain = URLCanonicalizer.domain(for: url)
+    let domain = canonicalURL.host?.lowercased() ?? url.host?.lowercased() ?? ""
     let pageTitle = title.isEmpty ? domain : title
 
     let descriptor = FetchDescriptor<VisitRecord>(

@@ -22,7 +22,9 @@ final class BookmarkStore {
   }
 
   func bookmark(for url: URL) -> BookmarkRecord? {
-    guard let canonical = URLCanonicalizer.canonicalString(for: url) else { return nil }
+    // ⚡ Bolt Optimization: Cache canonical URL object to avoid double parsing for string and domain
+    guard let canonicalURL = URLCanonicalizer.canonicalize(url) else { return nil }
+    let canonical = canonicalURL.absoluteString
     guard let record = fetchOne(canonicalURL: canonical) else { return nil }
     guard BookmarkRecordStatus.isActive(record) else { return nil }
     return record
@@ -46,11 +48,13 @@ final class BookmarkStore {
   ) throws -> BookmarkRecord {
     pruneExpired()
 
-    guard let canonical = URLCanonicalizer.canonicalString(for: url) else {
+    // ⚡ Bolt Optimization: Cache canonical URL object to avoid double parsing for string and domain
+    guard let canonicalURL = URLCanonicalizer.canonicalize(url) else {
       throw BookmarkStoreError.invalidURL
     }
+    let canonical = canonicalURL.absoluteString
 
-    let domain = URLCanonicalizer.domain(for: url)
+    let domain = canonicalURL.host?.lowercased() ?? url.host?.lowercased() ?? ""
     let pageTitle = title.isEmpty ? domain : title
     let trimmedNote = note.trimmingCharacters(in: .whitespacesAndNewlines)
     let expiresAt = BookmarkExpirationDate.expiresAt(for: expiration)
