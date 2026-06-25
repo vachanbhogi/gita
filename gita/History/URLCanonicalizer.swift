@@ -37,6 +37,11 @@ enum URLCanonicalizer {
     }
 
     components.fragment = nil
+
+    // 🛡️ Sentinel: Strip sensitive basic auth credentials to prevent plaintext logging in history/bookmarks
+    components.user = nil
+    components.password = nil
+
     return components.url
   }
 
