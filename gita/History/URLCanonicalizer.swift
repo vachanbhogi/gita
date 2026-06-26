@@ -13,6 +13,9 @@ enum URLCanonicalizer {
       return nil
     }
 
+    components.user = nil
+    components.password = nil
+
     if let host = components.host?.lowercased() {
       var normalizedHost = host
       if normalizedHost.hasPrefix("www.") {
