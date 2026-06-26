@@ -46,11 +46,13 @@ final class BookmarkStore {
   ) throws -> BookmarkRecord {
     pruneExpired()
 
-    guard let canonical = URLCanonicalizer.canonicalString(for: url) else {
+    // ⚡ Bolt Optimization: Parse URL once to avoid redundant URLComponents allocations and string manipulation.
+    guard let canonicalizedURL = URLCanonicalizer.canonicalize(url) else {
       throw BookmarkStoreError.invalidURL
     }
+    let canonical = canonicalizedURL.absoluteString
 
-    let domain = URLCanonicalizer.domain(for: url)
+    let domain = canonicalizedURL.host?.lowercased() ?? url.host?.lowercased() ?? ""
     let pageTitle = title.isEmpty ? domain : title
     let trimmedNote = note.trimmingCharacters(in: .whitespacesAndNewlines)
     let expiresAt = BookmarkExpirationDate.expiresAt(for: expiration)
