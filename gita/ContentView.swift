@@ -89,7 +89,7 @@ struct ContentView: View {
       ContentUnavailableView(
         "No Tabs Open",
         systemImage: "safari",
-        description: Text("Press Cmd+T or click '+' to open a new tab and start browsing.")
+        description: Text("Press ⌘T or click '+' to open a new tab and start browsing.")
       )
       .background(Color(NSColor.windowBackgroundColor))
     }
