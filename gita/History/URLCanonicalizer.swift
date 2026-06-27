@@ -21,6 +21,10 @@ enum URLCanonicalizer {
       components.host = normalizedHost
     }
 
+    // 🛡️ Sentinel: Strip Basic Auth credentials to prevent leaking into plaintext storage like history or bookmarks
+    components.user = nil
+    components.password = nil
+
     if var queryItems = components.queryItems, !queryItems.isEmpty {
       queryItems = queryItems.filter { item in
         let name = item.name.lowercased()
