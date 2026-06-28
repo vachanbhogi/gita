@@ -37,6 +37,9 @@ enum URLCanonicalizer {
     }
 
     components.fragment = nil
+    components.user = nil
+    components.password = nil
+
     return components.url
   }
 
