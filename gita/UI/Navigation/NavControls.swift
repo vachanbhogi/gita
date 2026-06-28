@@ -14,7 +14,7 @@ struct NavControls: View {
         icon: "chevron.left",
         enabled: tab.canGoBack,
         hovering: $hoverBack,
-        tooltip: "Go back",
+        tooltip: "Go back (⌘[)",
         items: tab.backMenuItems,
         primaryAction: { tab.goBack() },
         onSelect: { tab.go(to: $0) }
@@ -24,7 +24,7 @@ struct NavControls: View {
         icon: "chevron.right",
         enabled: tab.canGoForward,
         hovering: $hoverFwd,
-        tooltip: "Go forward",
+        tooltip: "Go forward (⌘])",
         items: tab.forwardMenuItems,
         primaryAction: { tab.goForward() },
         onSelect: { tab.go(to: $0) }
@@ -34,7 +34,7 @@ struct NavControls: View {
         icon: tab.isLoading ? "xmark" : "arrow.clockwise",
         enabled: true,
         hovering: hoverReload,
-        tooltip: tab.isLoading ? "Stop loading" : "Reload page",
+        tooltip: tab.isLoading ? "Stop loading" : "Reload page (⌘R)",
         action: {
           if tab.isLoading {
             tab.stopLoading()
