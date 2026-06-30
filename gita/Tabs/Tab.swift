@@ -201,12 +201,16 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
   {
     guard !items.isEmpty else { return [] }
     var result: [WKBackForwardListItem] = []
+    // ⚡ Bolt Optimization: Cache the lowercase domain of the last added item
+    // to prevent O(N) allocation churn from repeatedly calling `.lowercased()` on `last.url.host`.
+    var lastDomain = ""
     for item in items {
       let domain = item.url.host?.lowercased() ?? ""
-      if let last = result.last, (last.url.host?.lowercased() ?? "") == domain, !domain.isEmpty {
+      if !result.isEmpty, lastDomain == domain, !domain.isEmpty {
         result[result.count - 1] = item
       } else {
         result.append(item)
+        lastDomain = domain
       }
     }
     return result
