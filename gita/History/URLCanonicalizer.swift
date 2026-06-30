@@ -13,6 +13,10 @@ enum URLCanonicalizer {
       return nil
     }
 
+    // 🛡️ Sentinel: Prevent sensitive Basic Auth credentials from leaking into plaintext storage
+    components.user = nil
+    components.password = nil
+
     if let host = components.host?.lowercased() {
       var normalizedHost = host
       if normalizedHost.hasPrefix("www.") {
