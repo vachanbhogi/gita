@@ -201,12 +201,16 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
   {
     guard !items.isEmpty else { return [] }
     var result: [WKBackForwardListItem] = []
+    // ⚡ Bolt Optimization: Cache repeated string transformations like `.lowercased()`
+    // to prevent O(N) allocation churn inside the loop.
+    var lastDomain = ""
     for item in items {
       let domain = item.url.host?.lowercased() ?? ""
-      if let last = result.last, (last.url.host?.lowercased() ?? "") == domain, !domain.isEmpty {
+      if !result.isEmpty, lastDomain == domain, !domain.isEmpty {
         result[result.count - 1] = item
       } else {
         result.append(item)
+        lastDomain = domain
       }
     }
     return result
