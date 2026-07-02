@@ -14,7 +14,7 @@ struct BookmarkStarButton: View {
         .frame(width: 18, height: 18)
     }
     .buttonStyle(.plain)
-    .help(isBookmarked ? "Edit Bookmark" : "Add Bookmark")
+    .help(isBookmarked ? "Edit Bookmark (⌘D)" : "Add Bookmark (⌘D)")
     .onAppear { refreshState() }
     .onChange(of: tab.url) { _, _ in refreshState() }
     .onChange(of: uiState.bookmarkSheetContext?.id) { _, _ in refreshState() }

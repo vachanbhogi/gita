@@ -20,10 +20,10 @@ struct ShieldsButton: View {
 
   private var tooltip: String {
     switch state {
-    case .loading: "Shields loading…"
-    case .active: "Shields up — ads and trackers blocked"
-    case .off: "Shields down — blocking disabled"
-    case .allowedForSite: "Shields down for this site"
+    case .loading: "Shields loading… (⇧⌘E)"
+    case .active: "Shields up — ads and trackers blocked (⇧⌘E)"
+    case .off: "Shields down — blocking disabled (⇧⌘E)"
+    case .allowedForSite: "Shields down for this site (⇧⌘E)"
     }
   }
 
