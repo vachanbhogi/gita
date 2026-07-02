@@ -108,6 +108,6 @@ struct TabCloseButton: View {
     }
     .buttonStyle(PressableButtonStyle())
     .onHover { hovered = $0 }
-    .help("Close tab")
+    .help("Close tab (⌘W)")
   }
 }

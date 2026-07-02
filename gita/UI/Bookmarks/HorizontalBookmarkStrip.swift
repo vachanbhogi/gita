@@ -75,6 +75,6 @@ struct HorizontalBookmarkStrip: View {
         )
     }
     .buttonStyle(.plain)
-    .help("Open bookmarks library")
+    .help("Open bookmarks library (⇧⌘B)")
   }
 }
