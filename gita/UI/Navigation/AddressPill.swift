@@ -46,15 +46,22 @@ struct AddressPill: View {
 
         // Display mode — centered host (on top, but passes clicks to the text field)
         HStack(spacing: 4) {
-          // Lock icon
-          Image(systemName: tab.isSecure ? "lock.fill" : "lock.open.fill")
-            .font(.system(size: 9, weight: .medium))
-            .foregroundStyle(
-              tab.isSecure
-                ? AnyShapeStyle(Color.primary.opacity(0.35))
-                : AnyShapeStyle(Color.orange.opacity(0.7))
-            )
-            .help(tab.isSecure ? "Secure Connection" : "Insecure Connection")
+          if displayHost.isEmpty {
+            Image(systemName: "magnifyingglass")
+              .font(.system(size: 9, weight: .medium))
+              .foregroundStyle(Color.primary.opacity(0.35))
+              .help("Search or enter address")
+          } else {
+            // Lock icon
+            Image(systemName: tab.isSecure ? "lock.fill" : "lock.open.fill")
+              .font(.system(size: 9, weight: .medium))
+              .foregroundStyle(
+                tab.isSecure
+                  ? AnyShapeStyle(Color.primary.opacity(0.35))
+                  : AnyShapeStyle(Color.orange.opacity(0.7))
+              )
+              .help(tab.isSecure ? "Secure Connection" : "Insecure Connection")
+          }
 
           Text(displayHost.isEmpty ? "Search or enter website name" : displayHost)
             .font(.system(size: 12, weight: .regular))
