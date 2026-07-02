@@ -22,7 +22,8 @@ final class BookmarkStore {
   }
 
   func bookmark(for url: URL) -> BookmarkRecord? {
-    guard let canonical = URLCanonicalizer.canonicalString(for: url) else { return nil }
+    guard let canonicalURL = URLCanonicalizer.canonicalize(url) else { return nil }
+    let canonical = canonicalURL.absoluteString
     guard let record = fetchOne(canonicalURL: canonical) else { return nil }
     guard BookmarkRecordStatus.isActive(record) else { return nil }
     return record

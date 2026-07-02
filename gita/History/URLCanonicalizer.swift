@@ -43,15 +43,4 @@ enum URLCanonicalizer {
     components.fragment = nil
     return components.url
   }
-
-  static func canonicalString(for url: URL) -> String? {
-    canonicalize(url)?.absoluteString
-  }
-
-  static func domain(for url: URL) -> String {
-    if let host = canonicalize(url)?.host?.lowercased() {
-      return host
-    }
-    return url.host?.lowercased() ?? ""
-  }
 }
