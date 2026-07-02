@@ -17,25 +17,32 @@ enum HistoryGrouper {
     let startOfYesterday = calendar.date(byAdding: .day, value: -1, to: startOfToday)!
     let startOfWeek = calendar.date(byAdding: .day, value: -7, to: startOfToday)!
 
-    var buckets: [HistorySection: [VisitRecord]] = [:]
+    // ⚡ Bolt Optimization: Use dedicated arrays instead of Dictionary hashing
+    // to prevent O(N) allocation churn and dictionary lookups on the UI render path.
+    var today: [VisitRecord] = []
+    var yesterday: [VisitRecord] = []
+    var thisWeek: [VisitRecord] = []
+    var older: [VisitRecord] = []
+
     for record in records {
       let visited = record.lastVisitedAt
-      let section: HistorySection
       if visited >= startOfToday {
-        section = .today
+        today.append(record)
       } else if visited >= startOfYesterday {
-        section = .yesterday
+        yesterday.append(record)
       } else if visited >= startOfWeek {
-        section = .thisWeek
+        thisWeek.append(record)
       } else {
-        section = .older
+        older.append(record)
       }
-      buckets[section, default: []].append(record)
     }
 
-    return HistorySection.allCases.compactMap { section in
-      guard let items = buckets[section], !items.isEmpty else { return nil }
-      return (section, items)
-    }
+    var result: [(HistorySection, [VisitRecord])] = []
+    if !today.isEmpty { result.append((.today, today)) }
+    if !yesterday.isEmpty { result.append((.yesterday, yesterday)) }
+    if !thisWeek.isEmpty { result.append((.thisWeek, thisWeek)) }
+    if !older.isEmpty { result.append((.older, older)) }
+
+    return result
   }
 }
