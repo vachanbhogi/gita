@@ -49,9 +49,13 @@ struct HistoryView: View {
           .frame(height: 0.5)
 
         if !historyEnabled {
-          HistoryDisabledState()
+          HistoryDisabledState() {
+            historyEnabled = true
+          }
         } else if filteredRecords.isEmpty {
-          HistoryEmptyState(hasSearchQuery: !searchText.isEmpty)
+          HistoryEmptyState(hasSearchQuery: !searchText.isEmpty) {
+            searchText = ""
+          }
         } else {
           historyList
         }
