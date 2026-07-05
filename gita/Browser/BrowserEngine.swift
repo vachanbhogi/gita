@@ -40,6 +40,10 @@ class BrowserEngine {
 
   func createNewTab(with urlString: String = "https://duckduckgo.com") -> Tab {
     let config = WKWebViewConfiguration()
+    // 🛡️ Sentinel: Enable Safe Browsing to block known phishing and malware sites.
+    if #available(macOS 10.15, *) {
+      config.preferences.isFraudulentWebsiteWarningEnabled = true
+    }
     AdBlockWebViewConfigurator.apply(to: config)
     let webView = WKWebView(frame: .zero, configuration: config)
     webView.setValue(true, forKey: "drawsBackground")
@@ -170,6 +174,10 @@ class BrowserEngine {
 
   private func restoreTab(at index: Int) {
     let config = WKWebViewConfiguration()
+    // 🛡️ Sentinel: Enable Safe Browsing to block known phishing and malware sites.
+    if #available(macOS 10.15, *) {
+      config.preferences.isFraudulentWebsiteWarningEnabled = true
+    }
     AdBlockWebViewConfigurator.apply(to: config)
     let webView = WKWebView(frame: .zero, configuration: config)
     webView.setValue(true, forKey: "drawsBackground")
