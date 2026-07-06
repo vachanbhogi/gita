@@ -42,7 +42,6 @@ class BrowserEngine {
     let config = WKWebViewConfiguration()
     if #available(macOS 10.15, *) {
       config.preferences.isFraudulentWebsiteWarningEnabled = true
-      // 🛡️ Sentinel: Safe Browsing explicitly enabled
     }
     AdBlockWebViewConfigurator.apply(to: config)
     let webView = WKWebView(frame: .zero, configuration: config)
@@ -176,7 +175,6 @@ class BrowserEngine {
     let config = WKWebViewConfiguration()
     if #available(macOS 10.15, *) {
       config.preferences.isFraudulentWebsiteWarningEnabled = true
-      // 🛡️ Sentinel: Safe Browsing explicitly enabled
     }
     AdBlockWebViewConfigurator.apply(to: config)
     let webView = WKWebView(frame: .zero, configuration: config)
