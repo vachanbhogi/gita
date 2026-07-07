@@ -1,14 +1,18 @@
 import SwiftUI
 
 struct HistoryDisabledState: View {
+  @Binding var historyEnabled: Bool
+
   var body: some View {
-    ContentUnavailableView(
-      "History Paused",
-      systemImage: "clock.badge.xmark",
-      description: Text(
-        "Browsing history is off. Turn on “Save history” above to start recording again."
-      )
-    )
+    ContentUnavailableView {
+      Label("History Paused", systemImage: "clock.badge.xmark")
+    } description: {
+      Text("Browsing history is off.")
+    } actions: {
+      Button("Turn on Save History") {
+        historyEnabled = true
+      }
+    }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
   }
 }
