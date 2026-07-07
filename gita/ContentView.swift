@@ -86,11 +86,16 @@ struct ContentView: View {
         }
       }
     } else {
-      ContentUnavailableView(
-        "No Tabs Open",
-        systemImage: "safari",
-        description: Text("Press ⌘T or click '+' to open a new tab and start browsing.")
-      )
+      ContentUnavailableView {
+        Label("No Tabs Open", systemImage: "safari")
+      } description: {
+        Text("Press ⌘T or click '+' to open a new tab and start browsing.")
+      } actions: {
+        Button("New Tab") {
+          engine.addNewTab(uiState: uiState)
+        }
+        .buttonStyle(.borderedProminent)
+      }
       .background(Color(NSColor.windowBackgroundColor))
     }
   }
