@@ -46,7 +46,10 @@ struct BookmarksView: View {
           .frame(height: 0.5)
 
         if filteredRecords.isEmpty {
-          BookmarksEmptyState(hasSearchQuery: !searchText.isEmpty)
+          BookmarksEmptyState(
+            hasSearchQuery: !searchText.isEmpty,
+            onClearSearch: { searchText = "" }
+          )
         } else {
           bookmarksList
         }

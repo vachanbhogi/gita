@@ -51,7 +51,10 @@ struct HistoryView: View {
         if !historyEnabled {
           HistoryDisabledState(historyEnabled: $historyEnabled)
         } else if filteredRecords.isEmpty {
-          HistoryEmptyState(hasSearchQuery: !searchText.isEmpty)
+          HistoryEmptyState(
+            hasSearchQuery: !searchText.isEmpty,
+            onClearSearch: { searchText = "" }
+          )
         } else {
           historyList
         }
