@@ -29,7 +29,7 @@ actor FaviconCache {
   private init() {
     let config = URLSessionConfiguration.ephemeral
     config.timeoutIntervalForRequest = 5.0  // 5 seconds max for headers
-    config.timeoutIntervalForResource = 15.0 // 15 seconds max for entire resource
+    config.timeoutIntervalForResource = 15.0  // 15 seconds max for entire resource
     self.session = URLSession(configuration: config)
     cache.countLimit = 100
   }
