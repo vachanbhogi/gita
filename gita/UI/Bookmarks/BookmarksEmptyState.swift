@@ -2,6 +2,7 @@ import SwiftUI
 
 struct BookmarksEmptyState: View {
   let hasSearchQuery: Bool
+  var clearSearch: (() -> Void)? = nil
 
   var body: some View {
     ContentUnavailableView {
@@ -12,6 +13,10 @@ struct BookmarksEmptyState: View {
           ? "Try a different search term."
           : "Press ⌘D or tap the star to save pages you want to keep."
       )
+    } actions: {
+      if hasSearchQuery, let clearSearch = clearSearch {
+        Button("Clear Search", action: clearSearch)
+      }
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
   }
