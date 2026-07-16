@@ -23,7 +23,16 @@ actor FaviconCache {
   // ⚡ Bolt Optimization: Track inflight network requests to deduplicate concurrent fetches.
   private var tasks = [URL: Task<NSImage?, Never>]()
 
+  // 🛡️ Sentinel: Custom ephemeral URLSession with short timeouts to prevent DoS from hanging connections.
+  private let session: URLSession
+
   private init() {
+    let config = URLSessionConfiguration.ephemeral
+    config.timeoutIntervalForRequest = 5.0
+    config.timeoutIntervalForResource = 10.0
+    self.session = URLSession(configuration: config)
+
+    // Must be set after all stored properties are initialized
     cache.countLimit = 100
   }
 
@@ -51,7 +60,7 @@ actor FaviconCache {
     // ⚡ Bolt Optimization: Converted from a @MainActor class to an actor.
     // This offloads the decoding of the NSImage(data:) from the main UI thread.
     let task = Task<NSImage?, Never> {
-      guard let (data, _) = try? await URLSession.shared.data(from: url),
+      guard let (data, _) = try? await self.session.data(from: url),
         let fetchedImage = NSImage(data: data)
       else { return nil }
       self.setImage(fetchedImage, for: url)
