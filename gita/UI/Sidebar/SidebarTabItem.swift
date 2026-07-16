@@ -46,7 +46,7 @@ struct SidebarTabItem: View {
               )
           }
           .buttonStyle(PressableButtonStyle())
-          .help("Close tab")
+          .help("Close tab (⌘W)")
         }
       }
       .padding(.horizontal, 8)

@@ -47,6 +47,7 @@ struct SidebarView: View {
     }
     .buttonStyle(PressableButtonStyle())
     .onHover { hoveringNewTab = $0 }
+    .help("New Tab (⌘T)")
     .padding(.horizontal, 8)
     .padding(.bottom, 6)
   }
