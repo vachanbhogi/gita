@@ -1,17 +1,23 @@
 import SwiftUI
 
 struct BookmarksEmptyState: View {
-  let hasSearchQuery: Bool
+  @Binding var searchText: String
 
   var body: some View {
     ContentUnavailableView {
-      Label(hasSearchQuery ? "No Results" : "No Bookmarks", systemImage: "bookmark")
+      Label(!searchText.isEmpty ? "No Results" : "No Bookmarks", systemImage: "bookmark")
     } description: {
       Text(
-        hasSearchQuery
+        !searchText.isEmpty
           ? "Try a different search term."
           : "Press ⌘D or tap the star to save pages you want to keep."
       )
+    } actions: {
+      if !searchText.isEmpty {
+        Button("Clear Search") {
+          searchText = ""
+        }
+      }
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
   }
