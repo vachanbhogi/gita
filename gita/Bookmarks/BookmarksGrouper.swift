@@ -10,7 +10,7 @@ enum BookmarksGrouper {
     var library: [BookmarkRecord] = []
 
     // Estimate capacities to minimize reallocation overhead
-    pinned.reserveCapacity(min(records.count, 8))  // Typically up to 8 pinned
+    pinned.reserveCapacity(min(records.count, 8)) // Typically up to 8 pinned
     library.reserveCapacity(records.count)
 
     for record in records {
