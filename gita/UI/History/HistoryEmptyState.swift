@@ -1,17 +1,23 @@
 import SwiftUI
 
 struct HistoryEmptyState: View {
-  let hasSearchQuery: Bool
+  @Binding var searchText: String
 
   var body: some View {
     ContentUnavailableView {
-      Label(hasSearchQuery ? "No Results" : "No History", systemImage: "clock")
+      Label(!searchText.isEmpty ? "No Results" : "No History", systemImage: "clock")
     } description: {
       Text(
-        hasSearchQuery
+        !searchText.isEmpty
           ? "Try a different search term."
           : "Pages you visit will appear here. Entries auto-delete after 30 days."
       )
+    } actions: {
+      if !searchText.isEmpty {
+        Button("Clear Search") {
+          searchText = ""
+        }
+      }
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
   }
