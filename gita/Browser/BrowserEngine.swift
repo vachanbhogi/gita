@@ -46,6 +46,11 @@ class BrowserEngine {
       config.preferences.isFraudulentWebsiteWarningEnabled = true
     }
 
+    // 🛡️ Sentinel: Automatically upgrade known hosts to HTTPS to prevent MITM attacks
+    if #available(macOS 11.3, iOS 14.5, *) {
+      config.upgradeKnownHostsToHTTPS = true
+    }
+
     AdBlockWebViewConfigurator.apply(to: config)
     let webView = WKWebView(frame: .zero, configuration: config)
     webView.setValue(true, forKey: "drawsBackground")
@@ -180,6 +185,11 @@ class BrowserEngine {
     // 🛡️ Sentinel: Enable Safe Browsing to provide baseline phishing and malware protection
     if #available(macOS 10.15, *) {
       config.preferences.isFraudulentWebsiteWarningEnabled = true
+    }
+
+    // 🛡️ Sentinel: Automatically upgrade known hosts to HTTPS to prevent MITM attacks
+    if #available(macOS 11.3, iOS 14.5, *) {
+      config.upgradeKnownHostsToHTTPS = true
     }
 
     AdBlockWebViewConfigurator.apply(to: config)
