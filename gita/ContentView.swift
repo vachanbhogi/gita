@@ -79,6 +79,7 @@ struct ContentView: View {
             ProgressView()
               .scaleEffect(0.9)
               .tint(.secondary)
+              .help("Loading")
             Text("Restoring tab…")
               .font(.system(size: 12.5, weight: .regular))
               .foregroundStyle(.secondary)
