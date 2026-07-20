@@ -82,6 +82,7 @@ struct AddressPill: View {
         ProgressView()
           .scaleEffect(0.38)
           .frame(width: 10, height: 10)
+          .help("Loading")
       }
 
       BookmarkStarButton(tab: tab, uiState: uiState)
