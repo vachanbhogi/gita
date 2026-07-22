@@ -26,6 +26,7 @@ struct SafariTabItem: View {
                 ProgressView()
                   .scaleEffect(0.32)
                   .frame(width: 12, height: 12)
+                  .help("Loading")
               } else if tab.isSuspended {
                 Image(systemName: "moon.fill")
                   .font(.system(size: 8))
