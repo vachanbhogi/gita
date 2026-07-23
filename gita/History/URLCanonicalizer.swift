@@ -4,12 +4,27 @@ enum URLCanonicalizer {
   private static let trackingParamPrefixes = ["utm_", "fbclid", "gclid", "mc_eid", "mc_cid"]
   private static let trackingParamExact: Set<String> = ["ref", "source", "campaign", "medium"]
 
+  // ⚡ Bolt Optimization: Use an NSCache wrapper (mapping NSURL to NSURL) to avoid the
+  // significant overhead of repeated URLComponents parsing on critical rendering paths.
+  private static let cache: NSCache<NSURL, NSURL> = {
+    let c = NSCache<NSURL, NSURL>()
+    c.countLimit = 1000
+    return c
+  }()
+  private static let nilMarker = NSURL(string: "gita-internal://nil")!
+
   static func canonicalize(_ url: URL) -> URL? {
+    if let cached = cache.object(forKey: url as NSURL) {
+      return cached === nilMarker ? nil : cached as URL
+    }
+
     guard let scheme = url.scheme?.lowercased(), scheme == "http" || scheme == "https" else {
+      cache.setObject(nilMarker, forKey: url as NSURL)
       return nil
     }
 
     guard var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
+      cache.setObject(nilMarker, forKey: url as NSURL)
       return nil
     }
 
@@ -41,6 +56,14 @@ enum URLCanonicalizer {
     }
 
     components.fragment = nil
-    return components.url
+
+    let result = components.url
+    if let r = result {
+      cache.setObject(r as NSURL, forKey: url as NSURL)
+    } else {
+      cache.setObject(nilMarker, forKey: url as NSURL)
+    }
+
+    return result
   }
 }
