@@ -80,7 +80,6 @@ struct AddressPill: View {
 
       if tab.isLoading {
         ProgressView()
-          .help("Loading")
           .scaleEffect(0.38)
           .frame(width: 10, height: 10)
           .help("Loading")

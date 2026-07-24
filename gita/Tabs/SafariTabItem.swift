@@ -24,7 +24,6 @@ struct SafariTabItem: View {
             } else {
               if tab.isLoading {
                 ProgressView()
-                  .help("Loading")
                   .scaleEffect(0.32)
                   .frame(width: 12, height: 12)
                   .help("Loading")
