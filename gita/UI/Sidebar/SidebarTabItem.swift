@@ -20,6 +20,7 @@ struct SidebarTabItem: View {
             ProgressView()
               .scaleEffect(0.32)
               .frame(width: 12, height: 12)
+              .help("Loading")
           } else {
             FaviconView(url: tab.faviconURL, size: 12, iconSize: 9.5)
           }
@@ -46,7 +47,7 @@ struct SidebarTabItem: View {
               )
           }
           .buttonStyle(PressableButtonStyle())
-          .help("Close tab")
+          .help("Close tab (⌘W)")
         }
       }
       .padding(.horizontal, 8)
