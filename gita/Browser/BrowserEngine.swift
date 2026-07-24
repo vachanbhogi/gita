@@ -41,6 +41,11 @@ class BrowserEngine {
   func createNewTab(with urlString: String = "https://duckduckgo.com") -> Tab {
     let config = WKWebViewConfiguration()
 
+    // 🛡️ Sentinel: Automatically upgrade known HTTP hosts to HTTPS to prevent MITM attacks
+    if #available(macOS 11.3, iOS 14.5, *) {
+      config.upgradeKnownHostsToHTTPS = true
+    }
+
     // 🛡️ Sentinel: Enable Safe Browsing to provide baseline phishing and malware protection
     if #available(macOS 10.15, *) {
       config.preferences.isFraudulentWebsiteWarningEnabled = true
@@ -181,6 +186,11 @@ class BrowserEngine {
 
   private func restoreTab(at index: Int) {
     let config = WKWebViewConfiguration()
+
+    // 🛡️ Sentinel: Automatically upgrade known HTTP hosts to HTTPS to prevent MITM attacks
+    if #available(macOS 11.3, iOS 14.5, *) {
+      config.upgradeKnownHostsToHTTPS = true
+    }
 
     // 🛡️ Sentinel: Enable Safe Browsing to provide baseline phishing and malware protection
     if #available(macOS 10.15, *) {
