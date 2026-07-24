@@ -50,6 +50,10 @@ class BrowserEngine {
     if #available(macOS 10.15, *) {
       config.preferences.isFraudulentWebsiteWarningEnabled = true
     }
+    // 🛡️ Sentinel: Upgrade known HTTP hosts to HTTPS to prevent MITM attacks
+    if #available(macOS 11.3, *) {
+      config.upgradeKnownHostsToHTTPS = true
+    }
 
     // 🛡️ Sentinel: Automatically upgrade requests to HTTPS when the host is known to support it
     if #available(macOS 11.3, *) {
@@ -195,6 +199,10 @@ class BrowserEngine {
     // 🛡️ Sentinel: Enable Safe Browsing to provide baseline phishing and malware protection
     if #available(macOS 10.15, *) {
       config.preferences.isFraudulentWebsiteWarningEnabled = true
+    }
+    // 🛡️ Sentinel: Upgrade known HTTP hosts to HTTPS to prevent MITM attacks
+    if #available(macOS 11.3, *) {
+      config.upgradeKnownHostsToHTTPS = true
     }
 
     // 🛡️ Sentinel: Automatically upgrade requests to HTTPS when the host is known to support it
