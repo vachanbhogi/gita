@@ -77,6 +77,7 @@ struct ContentView: View {
           Color(NSColor.windowBackgroundColor)
           VStack(spacing: 12) {
             ProgressView()
+              .help("Restoring tab")
               .scaleEffect(0.9)
               .tint(.secondary)
               .help("Restoring tab")
