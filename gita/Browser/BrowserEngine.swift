@@ -65,6 +65,11 @@ class BrowserEngine {
       config.upgradeKnownHostsToHTTPS = true
     }
 
+    // 🛡️ Sentinel: Automatically upgrade known hosts to HTTPS to prevent MITM attacks
+    if #available(macOS 11.3, iOS 14.5, *) {
+      config.upgradeKnownHostsToHTTPS = true
+    }
+
     AdBlockWebViewConfigurator.apply(to: config)
     let webView = WKWebView(frame: .zero, configuration: config)
     webView.setValue(true, forKey: "drawsBackground")
@@ -217,6 +222,11 @@ class BrowserEngine {
 
     // 🛡️ Sentinel: Automatically upgrade known HTTP hosts to HTTPS to prevent MITM attacks
     if #available(macOS 11.3, *) {
+      config.upgradeKnownHostsToHTTPS = true
+    }
+
+    // 🛡️ Sentinel: Automatically upgrade known hosts to HTTPS to prevent MITM attacks
+    if #available(macOS 11.3, iOS 14.5, *) {
       config.upgradeKnownHostsToHTTPS = true
     }
 
