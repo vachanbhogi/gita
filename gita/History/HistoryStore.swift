@@ -142,6 +142,11 @@ final class HistoryStore {
   func clear(range: HistoryClearRange) {
     let cutoff = cutoffDate(for: range)
 
+    // 🛡️ Sentinel: Clear WKWebsiteDataStore (cookies, local storage, caches) to prevent tracking and ensure privacy after clearing history.
+    let dataTypes = WKWebsiteDataStore.allWebsiteDataTypes()
+    let fromDate = cutoff ?? Date.distantPast
+    WKWebsiteDataStore.default().removeData(ofTypes: dataTypes, modifiedSince: fromDate) {}
+
     do {
       if #available(macOS 15.0, iOS 18.0, *) {
         if let cutoff {
