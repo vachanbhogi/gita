@@ -142,6 +142,16 @@ final class HistoryStore {
   func clear(range: HistoryClearRange) {
     let cutoff = cutoffDate(for: range)
 
+    // 🛡️ Sentinel: Ensure WKWebView's persistent tracking data (cookies, caches, etc.) is cleared alongside app history.
+    let dataTypes = WKWebsiteDataStore.allWebsiteDataTypes()
+    let dataStore = WKWebsiteDataStore.default()
+    if let cutoff {
+      dataStore.removeData(ofTypes: dataTypes, modifiedSince: cutoff, completionHandler: {})
+    } else {
+      dataStore.removeData(
+        ofTypes: dataTypes, modifiedSince: Date.distantPast, completionHandler: {})
+    }
+
     do {
       if #available(macOS 15.0, iOS 18.0, *) {
         if let cutoff {
