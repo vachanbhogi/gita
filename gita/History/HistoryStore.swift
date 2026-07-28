@@ -148,7 +148,8 @@ final class HistoryStore {
     if let cutoff {
       dataStore.removeData(ofTypes: dataTypes, modifiedSince: cutoff, completionHandler: {})
     } else {
-      dataStore.removeData(ofTypes: dataTypes, modifiedSince: Date.distantPast, completionHandler: {})
+      dataStore.removeData(
+        ofTypes: dataTypes, modifiedSince: Date.distantPast, completionHandler: {})
     }
 
     do {
