@@ -118,6 +118,19 @@ final class HistoryStore {
 
   func forgetDomain(_ domain: String) {
     let normalized = domain.lowercased()
+
+    // 🛡️ Sentinel: Ensure WKWebView persistent tracking data (cookies, storage, etc) is cleared
+    // when local history is deleted to prevent privacy tracking leaks.
+    let dataStore = WKWebsiteDataStore.default()
+    dataStore.fetchDataRecords(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes()) { records in
+      let recordsToRemove = records.filter { record in
+        let domainLower = record.displayName.lowercased()
+        return domainLower == normalized || domainLower.hasSuffix(".\(normalized)")
+      }
+      if !recordsToRemove.isEmpty {
+        dataStore.removeData(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), for: recordsToRemove, completionHandler: {})
+      }
+    }
     do {
       if #available(macOS 15.0, iOS 18.0, *) {
         try context.delete(
@@ -141,6 +154,11 @@ final class HistoryStore {
 
   func clear(range: HistoryClearRange) {
     let cutoff = cutoffDate(for: range)
+
+    // 🛡️ Sentinel: Ensure WKWebView persistent tracking data (cookies, storage, etc) is cleared
+    // when local history is deleted to prevent privacy tracking leaks.
+    let dataStore = WKWebsiteDataStore.default()
+    dataStore.removeData(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), modifiedSince: cutoff ?? Date.distantPast, completionHandler: {})
 
     do {
       if #available(macOS 15.0, iOS 18.0, *) {
