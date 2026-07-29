@@ -128,7 +128,9 @@ final class HistoryStore {
         return domainLower == normalized || domainLower.hasSuffix(".\(normalized)")
       }
       if !recordsToRemove.isEmpty {
-        dataStore.removeData(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), for: recordsToRemove, completionHandler: {})
+        dataStore.removeData(
+          ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), for: recordsToRemove,
+          completionHandler: {})
       }
     }
     do {
@@ -158,7 +160,9 @@ final class HistoryStore {
     // 🛡️ Sentinel: Ensure WKWebView persistent tracking data (cookies, storage, etc) is cleared
     // when local history is deleted to prevent privacy tracking leaks.
     let dataStore = WKWebsiteDataStore.default()
-    dataStore.removeData(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), modifiedSince: cutoff ?? Date.distantPast, completionHandler: {})
+    dataStore.removeData(
+      ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), modifiedSince: cutoff ?? Date.distantPast,
+      completionHandler: {})
 
     do {
       if #available(macOS 15.0, iOS 18.0, *) {
