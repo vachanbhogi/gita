@@ -33,28 +33,14 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
     if let webView = self.webView {
       webView.navigationDelegate = self
       setupObservations(for: webView)
+
+      self.url = webView.url?.absoluteString ?? ""
+      if let host = webView.url?.host {
+        self.faviconURL = URL(string: "https://www.google.com/s2/favicons?sz=32&domain=\(host)")
+      }
+      self.isSecure = webView.hasOnlySecureContent
       self.canGoBack = webView.canGoBack
       self.canGoForward = webView.canGoForward
-      self.isSecure = webView.hasOnlySecureContent
-      if let url = webView.url {
-        self.url = url.absoluteString
-        if let host = url.host {
-          self.host = host
-          self.displayHost = host.hasPrefix("www.") ? String(host.dropFirst(4)) : host
-          self.faviconURL = URL(string: "https://www.google.com/s2/favicons?sz=32&domain=\(host)")
-        } else {
-          self.displayHost = url.absoluteString
-        }
-      }
-    } else if case .suspended(_, let lastURL) = state {
-      self.url = lastURL.absoluteString
-      if let host = lastURL.host {
-        self.host = host
-        self.displayHost = host.hasPrefix("www.") ? String(host.dropFirst(4)) : host
-        self.faviconURL = URL(string: "https://www.google.com/s2/favicons?sz=32&domain=\(host)")
-      } else {
-        self.displayHost = lastURL.absoluteString
-      }
     }
   }
 
@@ -99,12 +85,8 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
           let urlString = webView.url?.absoluteString ?? ""
           self.url = urlString
           if let url = webView.url, let host = url.host {
-            self.host = host
-            self.displayHost = host.hasPrefix("www.") ? String(host.dropFirst(4)) : host
             self.faviconURL = URL(string: "https://www.google.com/s2/favicons?sz=32&domain=\(host)")
           } else {
-            self.host = ""
-            self.displayHost = urlString
             self.faviconURL = nil
           }
         }
