@@ -137,12 +137,16 @@ final class HistoryStore {
 
       // 🛡️ Sentinel: Remove persistent tracking data to prevent privacy leaks after history deletion
       Task { @MainActor in
-        WKWebsiteDataStore.default().fetchDataRecords(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes()) { records in
+        WKWebsiteDataStore.default().fetchDataRecords(
+          ofTypes: WKWebsiteDataStore.allWebsiteDataTypes()
+        ) { records in
           let recordsToDelete = records.filter { record in
             let recordDomain = record.displayName.lowercased()
             return recordDomain == normalized || recordDomain.hasSuffix(".\(normalized)")
           }
-          WKWebsiteDataStore.default().removeData(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), for: recordsToDelete) {}
+          WKWebsiteDataStore.default().removeData(
+            ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), for: recordsToDelete
+          ) {}
         }
       }
     } catch {
