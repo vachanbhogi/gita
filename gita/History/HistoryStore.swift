@@ -134,6 +134,17 @@ final class HistoryStore {
         }
       }
       try context.save()
+
+      // 🛡️ Sentinel: Remove persistent tracking data to prevent privacy leaks after history deletion
+      Task { @MainActor in
+        WKWebsiteDataStore.default().fetchDataRecords(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes()) { records in
+          let recordsToDelete = records.filter { record in
+            let recordDomain = record.displayName.lowercased()
+            return recordDomain == normalized || recordDomain.hasSuffix(".\(normalized)")
+          }
+          WKWebsiteDataStore.default().removeData(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), for: recordsToDelete) {}
+        }
+      }
     } catch {
       print("HistoryStore forgetDomain failed: \(error)")
     }
@@ -169,6 +180,13 @@ final class HistoryStore {
       try context.save()
       lastRecordedCanonicalURL = nil
       lastRecordedAt = nil
+
+      // 🛡️ Sentinel: Remove persistent tracking data to prevent privacy leaks after history deletion
+      Task { @MainActor in
+        let types = WKWebsiteDataStore.allWebsiteDataTypes()
+        let date = cutoff ?? Date.distantPast
+        WKWebsiteDataStore.default().removeData(ofTypes: types, modifiedSince: date) {}
+      }
     } catch {
       print("HistoryStore clear failed: \(error)")
     }
