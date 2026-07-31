@@ -144,7 +144,9 @@ final class HistoryStore {
             return recordDomain == normalized || recordDomain.hasSuffix(".\(normalized)")
           }
           if !recordsToDelete.isEmpty {
-            dataStore.removeData(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), for: recordsToDelete) {
+            dataStore.removeData(
+              ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), for: recordsToDelete
+            ) {
               print("HistoryStore forgot domain data in WKWebsiteDataStore: \(normalized)")
             }
           }
@@ -189,7 +191,9 @@ final class HistoryStore {
       // 🛡️ Sentinel: Also clear persistent engine tracking data to prevent incomplete history deletion
       DispatchQueue.main.async {
         let dateToClearFrom = cutoff ?? Date.distantPast
-        WKWebsiteDataStore.default().removeData(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), modifiedSince: dateToClearFrom) {
+        WKWebsiteDataStore.default().removeData(
+          ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), modifiedSince: dateToClearFrom
+        ) {
           print("HistoryStore cleared WKWebsiteDataStore data from \(dateToClearFrom)")
         }
       }
