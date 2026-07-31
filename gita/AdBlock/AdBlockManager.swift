@@ -33,7 +33,7 @@ final class AdBlockManager {
   func shieldState(for tab: Tab?) -> AdBlockShieldState {
     guard AdBlockSettings.shared.isEnabled else { return .off }
     guard isRulesReady, engineLoaded else { return .loading }
-    guard let urlString = tab?.url, let host = URL(string: urlString)?.host else { return .active }
+    guard let host = tab?.host, !host.isEmpty else { return .active }
     if AdBlockSiteSettings.shared.isAllowed(host: host) { return .allowedForSite }
     return .active
   }
@@ -43,17 +43,13 @@ final class AdBlockManager {
   }
 
   func disableOnCurrentSite(tab: Tab?) {
-    guard let urlString = tab?.url, let host = URL(string: urlString)?.host, !host.isEmpty else {
-      return
-    }
+    guard let host = tab?.host, !host.isEmpty else { return }
     AdBlockSiteSettings.shared.allow(host: host)
     applyPolicyToAllTabs(reloadWebView: tab?.webView)
   }
 
   func enableOnCurrentSite(tab: Tab?) {
-    guard let urlString = tab?.url, let host = URL(string: urlString)?.host, !host.isEmpty else {
-      return
-    }
+    guard let host = tab?.host, !host.isEmpty else { return }
     AdBlockSiteSettings.shared.remove(host: host)
     applyPolicyToAllTabs(reloadWebView: tab?.webView)
   }
