@@ -14,6 +14,9 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
   var failedURL: String?
 
   var url: String = ""
+  // ⚡ Bolt Optimization: Cache derived properties directly on the @Observable model
+  // to avoid repetitive URL(string:) parsing in high-frequency rendering loops.
+  var host: String = ""
   var isSecure: Bool = false
   var canGoBack: Bool = false
   var canGoForward: Bool = false
@@ -32,6 +35,7 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
       setupObservations(for: webView)
 
       self.url = webView.url?.absoluteString ?? ""
+      self.host = webView.url?.host ?? ""
       if let host = webView.url?.host {
         self.faviconURL = URL(string: "https://www.google.com/s2/favicons?sz=32&domain=\(host)")
       }
@@ -81,6 +85,10 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
           guard let self = self else { return }
           let urlString = webView.url?.absoluteString ?? ""
           self.url = urlString
+
+          let hostString = webView.url?.host ?? ""
+          self.host = hostString
+
           if let url = webView.url, let host = url.host {
             self.faviconURL = URL(string: "https://www.google.com/s2/favicons?sz=32&domain=\(host)")
           } else {
