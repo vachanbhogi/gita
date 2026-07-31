@@ -134,6 +134,22 @@ final class HistoryStore {
         }
       }
       try context.save()
+
+      // 🛡️ Sentinel: Also clear persistent engine tracking data to prevent incomplete history deletion
+      DispatchQueue.main.async {
+        let dataStore = WKWebsiteDataStore.default()
+        dataStore.fetchDataRecords(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes()) { records in
+          let recordsToDelete = records.filter { record in
+            let recordDomain = record.displayName.lowercased()
+            return recordDomain == normalized || recordDomain.hasSuffix(".\(normalized)")
+          }
+          if !recordsToDelete.isEmpty {
+            dataStore.removeData(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), for: recordsToDelete) {
+              print("HistoryStore forgot domain data in WKWebsiteDataStore: \(normalized)")
+            }
+          }
+        }
+      }
     } catch {
       print("HistoryStore forgetDomain failed: \(error)")
     }
@@ -169,6 +185,14 @@ final class HistoryStore {
       try context.save()
       lastRecordedCanonicalURL = nil
       lastRecordedAt = nil
+
+      // 🛡️ Sentinel: Also clear persistent engine tracking data to prevent incomplete history deletion
+      DispatchQueue.main.async {
+        let dateToClearFrom = cutoff ?? Date.distantPast
+        WKWebsiteDataStore.default().removeData(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), modifiedSince: dateToClearFrom) {
+          print("HistoryStore cleared WKWebsiteDataStore data from \(dateToClearFrom)")
+        }
+      }
     } catch {
       print("HistoryStore clear failed: \(error)")
     }
