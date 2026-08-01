@@ -9,10 +9,8 @@ struct AddressPill: View {
   @State private var hovering = false
 
   private var displayHost: String {
-    guard !tab.url.isEmpty,
-      let url = URL(string: tab.url),
-      let host = url.host
-    else { return tab.url }
+    guard !tab.url.isEmpty, !tab.host.isEmpty else { return tab.url }
+    let host = tab.host
     return host.hasPrefix("www.") ? String(host.dropFirst(4)) : host
   }
 
