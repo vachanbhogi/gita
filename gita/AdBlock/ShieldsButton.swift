@@ -28,9 +28,7 @@ struct ShieldsButton: View {
   }
 
   private var isSiteAllowed: Bool {
-    guard let urlString = engine.activeTab?.url,
-      let host = URL(string: urlString)?.host
-    else { return false }
+    guard let host = engine.activeTab?.host, !host.isEmpty else { return false }
     return AdBlockSiteSettings.shared.isAllowed(host: host)
   }
 
