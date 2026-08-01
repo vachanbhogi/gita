@@ -134,6 +134,18 @@ final class HistoryStore {
         }
       }
       try context.save()
+
+      Task { @MainActor in
+        let dataStore = WKWebsiteDataStore.default()
+        let records = await dataStore.dataRecords(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes())
+        let matching = records.filter {
+          $0.displayName == normalized || $0.displayName.hasSuffix(".\(normalized)")
+        }
+        if !matching.isEmpty {
+          await dataStore.removeData(
+            ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), for: matching)
+        }
+      }
     } catch {
       print("HistoryStore forgetDomain failed: \(error)")
     }
@@ -169,6 +181,19 @@ final class HistoryStore {
       try context.save()
       lastRecordedCanonicalURL = nil
       lastRecordedAt = nil
+
+      Task { @MainActor in
+        let dataStore = WKWebsiteDataStore.default()
+        if let cutoff {
+          await dataStore.removeData(
+            ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), modifiedSince: cutoff)
+        } else {
+          let records = await dataStore.dataRecords(
+            ofTypes: WKWebsiteDataStore.allWebsiteDataTypes())
+          await dataStore.removeData(
+            ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), for: records)
+        }
+      }
     } catch {
       print("HistoryStore clear failed: \(error)")
     }
