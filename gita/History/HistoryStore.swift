@@ -142,7 +142,8 @@ final class HistoryStore {
           $0.displayName == normalized || $0.displayName.hasSuffix(".\(normalized)")
         }
         if !matching.isEmpty {
-          await dataStore.removeData(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), for: matching)
+          await dataStore.removeData(
+            ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), for: matching)
         }
       }
     } catch {
@@ -189,7 +190,8 @@ final class HistoryStore {
         } else {
           let records = await dataStore.dataRecords(
             ofTypes: WKWebsiteDataStore.allWebsiteDataTypes())
-          await dataStore.removeData(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), for: records)
+          await dataStore.removeData(
+            ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), for: records)
         }
       }
     } catch {
