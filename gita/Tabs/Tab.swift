@@ -13,7 +13,17 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
   private var pendingNavigationType: WKNavigationType?
   var failedURL: String?
 
-  var url: String = ""
+  // ⚡ Bolt Optimization: Cache derived URL property on model to avoid repeated URL parsing during render loop
+  var url: String = "" {
+    didSet {
+      if let parsedURL = URL(string: url), let host = parsedURL.host {
+        displayHost = host.hasPrefix("www.") ? String(host.dropFirst(4)) : host
+      } else {
+        displayHost = url
+      }
+    }
+  }
+  var displayHost: String = ""
   var isSecure: Bool = false
   var canGoBack: Bool = false
   var canGoForward: Bool = false
