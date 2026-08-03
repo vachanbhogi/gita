@@ -239,9 +239,13 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
     if let url = navigationAction.request.url {
       let scheme = url.scheme?.lowercased()
 
+      // 🛡️ Sentinel: Strictly validate the application or tab state before executing internal application URL schemes (e.g., `gita://`).
+      // This prevents untrusted web content from abusing these schemes via JavaScript or iframes to cause annoyances or DoS attacks.
       if scheme == "gita" && url.host == "reload" {
         decisionHandler(.cancel)
-        self.reload()
+        if case .failed = self.state {
+          self.reload()
+        }
         return
       }
 
