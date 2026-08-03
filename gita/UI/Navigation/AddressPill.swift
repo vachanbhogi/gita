@@ -10,8 +10,7 @@ struct AddressPill: View {
 
   private var displayHost: String {
     guard !tab.url.isEmpty,
-      let url = URL(string: tab.url),
-      let host = url.host
+      let host = tab.host
     else { return tab.url }
     return host.hasPrefix("www.") ? String(host.dropFirst(4)) : host
   }

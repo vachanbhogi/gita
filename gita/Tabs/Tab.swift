@@ -13,10 +13,18 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
   private var pendingNavigationType: WKNavigationType?
   var failedURL: String?
 
-  var url: String = ""
+  // ⚡ Bolt Optimization: Cache the URL host string directly on the model
+  // to prevent repetitive, expensive URL(string:) allocations during high-frequency
+  // SwiftUI render loops (e.g. text field focus or hover states) in AddressPill.swift.
+  var url: String = "" {
+    didSet {
+      self.host = URL(string: url)?.host
+    }
+  }
   var isSecure: Bool = false
   var canGoBack: Bool = false
   var canGoForward: Bool = false
+  var host: String?
   var faviconURL: URL? = nil
 
   init(id: UUID = UUID(), title: String = "New Tab", state: TabState, lastActiveTime: Date = Date())
@@ -25,6 +33,7 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
     self.title = title
     self.state = state
     self.lastActiveTime = lastActiveTime
+    // host will remain nil unless url is set via the webView below
     super.init()
 
     if let webView = self.webView {
@@ -81,7 +90,7 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
           guard let self = self else { return }
           let urlString = webView.url?.absoluteString ?? ""
           self.url = urlString
-          if let url = webView.url, let host = url.host {
+          if let host = webView.url?.host {
             self.faviconURL = URL(string: "https://www.google.com/s2/favicons?sz=32&domain=\(host)")
           } else {
             self.faviconURL = nil
