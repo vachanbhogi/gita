@@ -241,7 +241,9 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
 
       if scheme == "gita" && url.host == "reload" {
         decisionHandler(.cancel)
-        self.reload()
+        if case .failed = self.state {
+          self.reload()
+        }
         return
       }
 
