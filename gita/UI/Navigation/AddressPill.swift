@@ -8,14 +8,6 @@ struct AddressPill: View {
   @FocusState private var focused: Bool
   @State private var hovering = false
 
-  private var displayHost: String {
-    guard !tab.url.isEmpty,
-      let url = URL(string: tab.url),
-      let host = url.host
-    else { return tab.url }
-    return host.hasPrefix("www.") ? String(host.dropFirst(4)) : host
-  }
-
   var body: some View {
     HStack(spacing: 5) {
       ZStack {
@@ -46,7 +38,7 @@ struct AddressPill: View {
 
         // Display mode — centered host (on top, but passes clicks to the text field)
         HStack(spacing: 4) {
-          if displayHost.isEmpty {
+          if tab.displayHost.isEmpty {
             Image(systemName: "magnifyingglass")
               .font(.system(size: 9, weight: .medium))
               .foregroundStyle(Color.primary.opacity(0.35))
@@ -63,10 +55,10 @@ struct AddressPill: View {
               .help(tab.isSecure ? "Secure Connection" : "Insecure Connection")
           }
 
-          Text(displayHost.isEmpty ? "Search or enter website name" : displayHost)
+          Text(tab.displayHost.isEmpty ? "Search or enter website name" : tab.displayHost)
             .font(.system(size: 12, weight: .regular))
             .foregroundStyle(
-              displayHost.isEmpty
+              tab.displayHost.isEmpty
                 ? Color.primary.opacity(0.3)
                 : Color.primary.opacity(0.8)
             )
