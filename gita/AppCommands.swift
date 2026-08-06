@@ -55,7 +55,7 @@ struct AppCommands: Commands {
       Divider()
 
       if let tab = engine.activeTab,
-        let host = URL(string: tab.url)?.host,
+        let host = tab.host,
         AdBlockSiteSettings.shared.isAllowed(host: host)
       {
         Button("Enable Shields on This Site") {

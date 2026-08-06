@@ -13,7 +13,14 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
   private var pendingNavigationType: WKNavigationType?
   var failedURL: String?
 
-  var url: String = ""
+  // ⚡ Bolt Optimization: Cache derived property `host` to prevent redundant URL(string:) parsing
+  // on high-frequency rendering paths (e.g. AddressPill and AdBlock updates)
+  var url: String = "" {
+    didSet {
+      self.host = URL(string: url)?.host
+    }
+  }
+  var host: String?
   var isSecure: Bool = false
   var canGoBack: Bool = false
   var canGoForward: Bool = false
@@ -26,6 +33,9 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
     self.state = state
     self.lastActiveTime = lastActiveTime
     super.init()
+
+    // ⚡ Bolt: Populate derived property safely after Phase 1 initialization
+    self.host = URL(string: self.url)?.host
 
     if let webView = self.webView {
       webView.navigationDelegate = self
