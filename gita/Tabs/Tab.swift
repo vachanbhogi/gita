@@ -13,7 +13,16 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
   private var pendingNavigationType: WKNavigationType?
   var failedURL: String?
 
-  var url: String = ""
+  // ⚡ Bolt Optimization: Cache derived URL properties to prevent repetitive,
+  // expensive string allocations and URL(string:) parsing during high-frequency
+  // SwiftUI render loops (e.g., AddressPill updates, keystrokes, hover states).
+  var url: String = "" {
+    didSet {
+      updateDerivedURLProperties()
+    }
+  }
+  var displayHost: String = ""
+
   var isSecure: Bool = false
   var canGoBack: Bool = false
   var canGoForward: Bool = false
@@ -39,6 +48,16 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
       self.canGoBack = webView.canGoBack
       self.canGoForward = webView.canGoForward
     }
+
+    updateDerivedURLProperties()
+  }
+
+  private func updateDerivedURLProperties() {
+    guard !url.isEmpty, let parsed = URL(string: url), let parsedHost = parsed.host else {
+      displayHost = url
+      return
+    }
+    displayHost = parsedHost.hasPrefix("www.") ? String(parsedHost.dropFirst(4)) : parsedHost
   }
 
   var webView: WKWebView? {
