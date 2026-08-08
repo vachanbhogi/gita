@@ -13,7 +13,12 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
   private var pendingNavigationType: WKNavigationType?
   var failedURL: String?
 
-  var url: String = ""
+  var url: String = "" {
+    didSet {
+      updateDisplayHost()
+    }
+  }
+  var displayHost: String = ""
   var isSecure: Bool = false
   var canGoBack: Bool = false
   var canGoForward: Bool = false
@@ -39,6 +44,18 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
       self.canGoBack = webView.canGoBack
       self.canGoForward = webView.canGoForward
     }
+    updateDisplayHost()
+  }
+
+  private func updateDisplayHost() {
+    guard !url.isEmpty,
+      let parsedURL = URL(string: url),
+      let host = parsedURL.host
+    else {
+      displayHost = url
+      return
+    }
+    displayHost = host.hasPrefix("www.") ? String(host.dropFirst(4)) : host
   }
 
   var webView: WKWebView? {
