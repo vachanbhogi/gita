@@ -49,8 +49,9 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
 
   private func updateDisplayHost() {
     guard !url.isEmpty,
-          let parsedURL = URL(string: url),
-          let host = parsedURL.host else {
+      let parsedURL = URL(string: url),
+      let host = parsedURL.host
+    else {
       displayHost = url
       return
     }
