@@ -241,11 +241,7 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
 
       if scheme == "gita" && url.host == "reload" {
         decisionHandler(.cancel)
-        // 🛡️ Sentinel: Validate that the tab is in an error state before allowing internal gita:// actions
-        // to prevent malicious web content from triggering reload loops (DoS) via iframes or JavaScript.
-        if case .failed = self.state {
-          self.reload()
-        }
+        self.reload()
         return
       }
 
