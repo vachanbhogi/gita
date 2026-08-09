@@ -245,7 +245,7 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
         // 🛡️ Sentinel: Strictly validate tab state before executing internal schemes
         // to prevent untrusted web content from abusing it via JS or iframes.
         if case .failed = self.state {
-            self.reload()
+          self.reload()
         }
         return
       }
