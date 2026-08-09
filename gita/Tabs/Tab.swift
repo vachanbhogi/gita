@@ -13,7 +13,12 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
   private var pendingNavigationType: WKNavigationType?
   var failedURL: String?
 
-  var url: String = ""
+  var url: String = "" {
+    didSet {
+      updateHost()
+    }
+  }
+  var host: String = ""
   var isSecure: Bool = false
   var canGoBack: Bool = false
   var canGoForward: Bool = false
@@ -32,13 +37,26 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
       setupObservations(for: webView)
 
       self.url = webView.url?.absoluteString ?? ""
+      self.updateHost()
       if let host = webView.url?.host {
         self.faviconURL = URL(string: "https://www.google.com/s2/favicons?sz=32&domain=\(host)")
       }
       self.isSecure = webView.hasOnlySecureContent
       self.canGoBack = webView.canGoBack
       self.canGoForward = webView.canGoForward
+    } else {
+      self.updateHost()
     }
+  }
+
+  private func updateHost() {
+    // ⚡ Bolt Optimization: Cache derived host directly on the @Observable model.
+    // This prevents expensive repetitive URL(string:) parsing in SwiftUI rendering loops.
+    guard !url.isEmpty, let parsedURL = URL(string: url), let parsedHost = parsedURL.host else {
+      self.host = ""
+      return
+    }
+    self.host = parsedHost.hasPrefix("www.") ? String(parsedHost.dropFirst(4)) : parsedHost
   }
 
   var webView: WKWebView? {
