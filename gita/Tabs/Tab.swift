@@ -13,7 +13,18 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
   private var pendingNavigationType: WKNavigationType?
   var failedURL: String?
 
-  var url: String = ""
+  // ⚡ Bolt Optimization: Cache `host` directly on the model via property observer
+  // to avoid repetitive, expensive URL string parsing during high-frequency render loops.
+  var url: String = "" {
+    didSet {
+      if let parsed = URL(string: url), let parsedHost = parsed.host {
+        self.host = parsedHost
+      } else {
+        self.host = ""
+      }
+    }
+  }
+  var host: String = ""
   var isSecure: Bool = false
   var canGoBack: Bool = false
   var canGoForward: Bool = false
@@ -31,9 +42,15 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
       webView.navigationDelegate = self
       setupObservations(for: webView)
 
-      self.url = webView.url?.absoluteString ?? ""
-      if let host = webView.url?.host {
-        self.faviconURL = URL(string: "https://www.google.com/s2/favicons?sz=32&domain=\(host)")
+      let urlString = webView.url?.absoluteString ?? ""
+      self.url = urlString
+      if let url = URL(string: urlString), let parsedHost = url.host {
+        self.host = parsedHost
+      } else {
+        self.host = ""
+      }
+      if let webViewHost = webView.url?.host {
+        self.faviconURL = URL(string: "https://www.google.com/s2/favicons?sz=32&domain=\(webViewHost)")
       }
       self.isSecure = webView.hasOnlySecureContent
       self.canGoBack = webView.canGoBack
