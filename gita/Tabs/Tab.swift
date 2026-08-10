@@ -50,7 +50,8 @@ class Tab: NSObject, WKNavigationDelegate, Identifiable {
         self.host = ""
       }
       if let webViewHost = webView.url?.host {
-        self.faviconURL = URL(string: "https://www.google.com/s2/favicons?sz=32&domain=\(webViewHost)")
+        self.faviconURL = URL(
+          string: "https://www.google.com/s2/favicons?sz=32&domain=\(webViewHost)")
       }
       self.isSecure = webView.hasOnlySecureContent
       self.canGoBack = webView.canGoBack
